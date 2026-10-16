@@ -46,7 +46,7 @@ with col_top2:
 
 st.markdown("---")
 
-# --- LISTAS DE LOCALIDADES POR REGIÓN ---
+# --- LISTAS DE LOCALIDADES ---
 LOCALIDADES_MARGARITA = [
     "Porlamar (Municipio Mariño)",
     "Pampatar (Municipio Maneiro)",
@@ -128,13 +128,12 @@ with tab_comprador:
             ]
         )
         
-        # Desplegar sub-localidades exactas según la región elegida
         if "Margarita" in nicho:
             localidad = st.selectbox("Selecciona la localidad:", LOCALIDADES_MARGARITA)
         elif "Caracas" in nicho:
             localidad = st.selectbox("Selecciona el municipio o sector de Caracas:", LOCALIDADES_CARACAS)
         elif "Miranda" in nicho:
-            localidad = st.selectbox("Selecciona la localidad o municipio de Miranda:", LOCALIDADES_MIRANDA)
+            localidad = st.selectbox("Selecciona la localidad de Miranda:", LOCALIDADES_MIRANDA)
         else:
             localidad = st.selectbox("Selecciona la parroquia o sector de La Guaira:", LOCALIDADES_LA_GUAIRA)
 
@@ -196,6 +195,7 @@ with tab_comprador:
 # =========================================================
 with tab_vendedor:
     st.subheader("Publica o Registra tu Inmueble")
+    st.markdown("Sube las fotos de tu propiedad directamente desde tu teléfono y completa los datos básicos.")
     
     with st.form("form_vendedor"):
         región_v = st.selectbox(
@@ -222,19 +222,28 @@ with tab_vendedor:
         tipo_v = st.selectbox("Tipo:", TIPOS_INMUEBLES, key="tipo_v")
         operacion_v = st.radio("Operación:", ["Venta", "Alquiler"], key="op_v")
         precio_v = st.number_input("Precio ($ USD):", min_value=0, value=30000, step=1000)
-        enlace_fotos = st.text_input("Enlace a fotos / Google Drive / Instagram:")
+        
+        # --- CARGA DIRECTA DE FOTOS DESDE EL TELÉFONO ---
+        fotos_cargadas = st.file_uploader(
+            "Sube fotos de la propiedad (puedes seleccionar varias):", 
+            type=["jpg", "png", "jpeg"], 
+            accept_multiple_files=True
+        )
         
         st.markdown("---")
         nombre_v = st.text_input("Nombre del Propietario / Agente:", key="nombre_v")
         telefono_v = st.text_input("WhatsApp de Contacto:", key="tel_v")
         
-        btn_vendedor = st.form_submit_button("📤 Registrar Inmueble en el Inventario")
+        btn_vendedor = st.form_submit_button("📤 Registrar Inmueble y Notificar")
         
     if btn_vendedor:
         if not titulo_v or not telefono_v:
             st.error("Por favor completa el título de la propiedad y tu teléfono.")
         else:
-            st.success("¡Información procesada exitosamente!")
+            st.success("¡Fotos e información procesadas con éxito!")
+            
+            # Contar cuántas fotos subió
+            num_fotos = len(fotos_cargadas) if fotos_cargadas else 0
             
             msg_prop = (
                 f"Hola, deseo publicar un inmueble:%0A"
@@ -242,13 +251,13 @@ with tab_vendedor:
                 f"*Tipo:* {tipo_v}%0A"
                 f"*Región:* {región_v} ({localidad_v})%0A"
                 f"*Operación:* {operacion_v} | *Precio:* ${precio_v}%0A"
-                f"*Fotos/Info:* {enlace_fotos}%0A"
+                f"*Fotos adjuntas en app:* {num_fotos} foto(s) cargada(s)%0A"
                 f"*Contacto:* {nombre_v} ({telefono_v})"
             )
             link_wa_v = f"https://wa.me/{MI_NUMERO_WA}?text={msg_prop}"
             
             st.markdown(
-                f'<a href="{link_wa_v}" target="_blank" style="display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;">📱 Validar Publicación vía WhatsApp</a>',
+                f'<a href="{link_wa_v}" target="_blank" style="display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;">📱 Enviar Publicación con Fotos a WhatsApp</a>',
                 unsafe_allow_html=True
             )
 
@@ -263,11 +272,22 @@ with tab_ia:
     
     st.info("💡 **Beneficio para Propietarios y Corredores:** Obtén una estimación de precio objetiva respaldada por datos antes de salir al mercado.")
     
-    msg_ia = "Hola, me interesa solicitar una Tasación e Inspección Visual por IA para evaluar mi inmueble."
+    # Carga de fotos para la IA de Tasación
+    fotos_tasacion = st.file_uploader(
+        "Sube fotos del inmueble para el análisis visual por IA:", 
+        type=["jpg", "png", "jpeg"], 
+        accept_multiple_files=True,
+        key="tasacion_files"
+    )
+    
+    if fotos_tasacion:
+        st.success(f"¡{len(fotos_tasacion)} foto(s) lista(s) para inspección visual!")
+    
+    msg_ia = "Hola, he subido fotos en la app y me interesa solicitar una Tasación e Inspección Visual por IA para evaluar mi inmueble."
     link_wa_ia = f"https://wa.me/{MI_NUMERO_WA}?text={msg_ia.replace(' ', '%20')}"
     
     st.markdown(
-        f'<a href="{link_wa_ia}" target="_blank" style="display:inline-block;padding:14px 24px;font-size:16px;font-weight:bold;color:white;background-color:#007BFF;text-align:center;text-decoration:none;border-radius:8px;">🤖 Solicitar Tasación e Inspección Visual por IA</a>',
+        f'<a href="{link_wa_ia}" target="_blank" style="display:inline-block;padding:14px 24px;font-size:16px;font-weight:bold;color:white;background-color:#007BFF;text-align:center;text-decoration:none;border-radius:8px;">🤖 Procesar Tasación e Inspección Visual por IA</a>',
         unsafe_allow_html=True
     )
 
@@ -290,5 +310,4 @@ with col_g2:
     st.markdown(
         f'<a href="{LINK_GRUPO_CARACAS}" target="_blank" style="display:inline-block;padding:10px 14px;font-size:14px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:6px;">Unirme al Grupo Caracas</a>',
         unsafe_allow_html=True
-)
-        
+    )
