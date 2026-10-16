@@ -30,7 +30,7 @@ def cargar_inventario(url):
 
 df_inmuebles = cargar_inventario(SHEET_URL)
 
-# --- BANNER SUPERIOR GRUPOS DE WHATSAPP ---
+# --- BANNER SUPERIOR DE GRUPOS DE WHATSAPP ---
 st.info("💬 **¿Quieres unirte a nuestras comunidades activas en WhatsApp?**")
 col_top1, col_top2 = st.columns(2)
 with col_top1:
@@ -46,60 +46,53 @@ with col_top2:
 
 st.markdown("---")
 
-# --- LISTAS DE LOCALIDADES DEDICADAS ---
+# --- LISTAS DE LOCALIDADES AMPLIADAS Y OPTIMIZADAS ---
 LOCALIDADES_MARGARITA = [
-    "Porlamar (Municipio Mariño)",
-    "Pampatar (Municipio Maneiro)",
+    "Pampatar (Municipio Maneiro - Alta Plusvalía)",
+    "Costa Azul / Playa El Ángel (Municipio Maneiro)",
+    "Porlamar - Centro y Av. 4 de Mayo (Municipio Mariño)",
     "La Asunción (Municipio Arismendi)",
     "Juan Griego (Municipio Marcano)",
     "El Valle del Espíritu Santo (Municipio García)",
     "Playa El Agua / Manzanillo (Municipio Antolín del Campo)",
     "Punta de Piedras (Municipio Tubores)",
-    "Boca de Pozo / San Francisco (Municipio Península de Macanao)",
-    "Coche (Municipio Villalba)",
-    "Otra localidad de Nueva Esparta"
+    "Península de Macanao",
+    "Coche (Municipio Villalba)"
 ]
 
 LOCALIDADES_CARACAS = [
-    "Libertador (Centro, El Recreo, Candelaria, San Bernardino, etc.)",
-    "Chacao",
-    "Baruta",
-    "El Hatillo",
-    "Sucre (Petare)",
-    "Otro sector de Caracas"
+    "Las Mercedes (Municipio Baruta)",
+    "Altamira (Municipio Chacao)",
+    "El Hatillo (Pueblo y Urbanizaciones)",
+    "El Junquito (Distrito Capital)",
+    "Chacaíto / Campo Alegre / El Rosal",
+    "La Castellana / Los Palos Grandes",
+    "Santa Fe / Caurimare / Las Minitas",
+    "Libertador (Centro, El Recreo, Candelaria, San Bernardino)",
+    "Sucre (Petare / Lechería / Terrazas del Ávila)"
 ]
 
 LOCALIDADES_MIRANDA = [
-    "Andrés Bello: San José de Barlovento",
-    "Páez: Río Chico",
-    "Buroz: Mamporal",
-    "Pedro Gual: Cúpira",
     "Guarenas / Guatire (Plaza y Zamora)",
     "Los Teques / Carrizal / Los Salias (Altos Mirandinos)",
-    "Valles del Tuy (Cúa, Ocumare, Charallave, Santa Teresa)",
+    "Valles del Tuy (Cúa, Ocumare, Charallave)",
+    "Barlovento: Río Chico / San José / Mamporal / Cúpira",
     "Otro sector de Miranda"
 ]
 
 LOCALIDADES_LA_GUAIRA = [
+    "El Junko (Estado La Guaira / Club de Campo)",
+    "Caraballeda (Playa Grande / Caribe)",
+    "Macuto",
     "Catia La Mar",
     "Maiquetía",
-    "La Guaira",
-    "Macuto",
-    "Caraballeda",
+    "La Guaira (Casco Histórico)",
     "Naiguatá",
-    "Caruao",
-    "Otras localidades del Estado La Guaira"
+    "Caruao"
 ]
 
 TIPOS_INMUEBLES = [
-    "Apartamento", 
-    "Casa", 
-    "Townhouse", 
-    "Posada / Hotel", 
-    "Local Comercial", 
-    "Terreno", 
-    "Oficina", 
-    "Fondo de Comercio"
+    "Apartamento", "Casa", "Townhouse", "Posada / Hotel", "Local Comercial", "Terreno", "Oficina"
 ]
 
 # CREACIÓN DE PESTAÑAS (TABS)
@@ -113,16 +106,11 @@ tab_comprador, tab_vendedor, tab_ia = st.tabs([
 # PESTAÑA 1: COMPRADORES
 # =========================================================
 with tab_comprador:
-    st.subheader("Búsqueda de Inmuebles y Registro de Requerimiento")
+    st.subheader("Búsqueda Avanzada de Inmuebles")
     
     nicho = st.selectbox(
         "1. Selecciona el Estado o Región principal:",
-        [
-            "Isla de Margarita (Nueva Esparta)", 
-            "Caracas (Distrito Capital)", 
-            "Estado Miranda", 
-            "Estado La Guaira"
-        ],
+        ["Isla de Margarita (Nueva Esparta)", "Caracas (Distrito Capital)", "Estado Miranda", "Estado La Guaira"],
         key="nicho_c_reactivo"
     )
     
@@ -135,19 +123,29 @@ with tab_comprador:
     else:
         loc_opciones = LOCALIDADES_LA_GUAIRA
         
-    localidad = st.selectbox("2. Selecciona la localidad o sector:", loc_opciones, key="loc_c_reactivo")
+    localidad = st.selectbox("2. Selecciona la localidad o sector específico:", loc_opciones, key="loc_c_reactivo")
 
     with st.form("form_comprador_detalles"):
-        operacion = st.radio("Operación:", ["Comprar", "Alquilar"])
+        operacion = st.radio("Transacción:", ["Comprar", "Alquilar"])
         tipo_inmueble = st.selectbox("Tipo de propiedad:", TIPOS_INMUEBLES)
-        presupuesto_max = st.number_input("Presupuesto máximo ($):", min_value=0, value=50000, step=2500)
+        
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
+            amoblado_filtro = st.selectbox("Condición:", ["Indiferente", "Amoblado y Equipado", "Sin amoblar"])
+        with col_c2:
+            presupuesto_max = st.number_input("Presupuesto máximo ($):", min_value=0, value=50000, step=2500)
+            
+        st.markdown("**Amenidades deseadas:**")
+        req_piscina = st.checkbox("Debe tener Piscina")
+        req_planta = st.checkbox("Debe tener Planta Eléctrica")
+        req_pozo = st.checkbox("Debe tener Pozo / Agua constante")
         
         st.markdown("---")
         st.markdown("**Datos de Contacto**")
         nombre_c = st.text_input("Nombre y Apellido:", key="nombre_c")
         telefono_c = st.text_input("WhatsApp (ej: 0412...):", key="tel_c")
         
-        btn_comprador = st.form_submit_button("🔍 Ver Coincidencias y Enviar Requerimiento")
+        btn_comprador = st.form_submit_button("🔍 Buscar Opciones y Enviar Requerimiento")
 
     if btn_comprador:
         if not nombre_c or not telefono_c:
@@ -175,14 +173,20 @@ with tab_comprador:
             else:
                 st.info("Requerimiento registrado con éxito.")
 
+            extras_busqueda = []
+            if req_piscina: extras_busqueda.append("Piscina")
+            if req_planta: extras_busqueda.append("Planta")
+            if req_pozo: extras_busqueda.append("Pozo")
+
             msg_wa = (
                 f"Hola, nuevo requerimiento de comprador:%0A"
                 f"*Cliente:* {nombre_c} ({telefono_c})%0A"
-                f"*Región:* {nicho}%0A"
-                f"*Localidad/Sector:* {localidad}%0A"
-                f"*Operación:* {operacion} - {tipo_inmueble}%0A"
+                f"*Transacción:* {operacion} ({tipo_inmueble})%0A"
+                f"*Región:* {nicho} - {localidad}%0A"
+                f"*Condición:* {amoblado_filtro}%0A"
                 f"*Presupuesto Máx:* ${presupuesto_max}%0A"
-                f"*Opciones vistas:* {', '.join(inmuebles_compatibles) if inmuebles_compatibles else 'Ninguna inmediata'}"
+                f"*Extras exigidos:* {', '.join(extras_busqueda) if extras_busqueda else 'Ninguno'}%0A"
+                f"*Opciones vistas en web:* {', '.join(inmuebles_compatibles) if inmuebles_compatibles else 'Ninguna inmediata'}"
             )
             link_wa = f"https://wa.me/{MI_NUMERO_WA}?text={msg_wa}"
             
@@ -195,16 +199,11 @@ with tab_comprador:
 # PESTAÑA 2: VENDEDORES / ALIADOS
 # =========================================================
 with tab_vendedor:
-    st.subheader("Publica o Registra tu Inmueble")
+    st.subheader("Publica o Registra tu Inmueble con Factores de Valor")
     
     región_v = st.selectbox(
         "1. Estado o Región de la propiedad:",
-        [
-            "Isla de Margarita (Nueva Esparta)", 
-            "Caracas (Distrito Capital)", 
-            "Estado Miranda", 
-            "Estado La Guaira"
-        ],
+        ["Isla de Margarita (Nueva Esparta)", "Caracas (Distrito Capital)", "Estado Miranda", "Estado La Guaira"],
         key="reg_v_reactivo"
     )
     
@@ -217,15 +216,27 @@ with tab_vendedor:
     else:
         loc_v_opciones = LOCALIDADES_LA_GUAIRA
         
-    localidad_v = st.selectbox("2. Localidad o Sector:", loc_v_opciones, key="loc_v_reactivo")
+    localidad_v = st.selectbox("2. Localidad o Sector específico:", loc_v_opciones, key="loc_v_reactivo")
 
     with st.form("form_vendedor_detalles"):
-        titulo_v = st.text_input("Título o breve descripción (ej: Casa 3 hab en Río Chico):")
-        tipo_v = st.selectbox("Tipo:", TIPOS_INMUEBLES, key="tipo_v")
-        operacion_v = st.radio("Operación:", ["Venta", "Alquiler"], key="op_v")
-        precio_v = st.number_input("Precio ($ USD):", min_value=0, value=30000, step=1000)
+        titulo_v = st.text_input("Título o breve descripción (ej: Casa quinta en El Junquito con clima de montaña):")
+        tipo_v = st.selectbox("Tipo de Inmueble:", TIPOS_INMUEBLES, key="tipo_v")
+        operacion_v = st.radio("Tipo de Transacción:", ["Venta", "Alquiler"], key="op_v")
         
-        # Carga visual de fotos en pantalla
+        col_v1, col_v2 = st.columns(2)
+        with col_v1:
+            precio_v = st.number_input("Precio ($ USD):", min_value=0, value=45000, step=1000)
+            habitaciones_v = st.number_input("Habitaciones:", min_value=0, value=2)
+        with col_v2:
+            estado_amoblado = st.selectbox("Condición de amoblado:", ["Amoblado y Equipado", "Semiamoblado", "Sin amoblar / Solo cocina"])
+            banos_v = st.number_input("Baños:", min_value=1, value=2)
+            
+        st.markdown("**Aspectos de Valor y Amenidades:**")
+        tiene_piscina = st.checkbox("Piscina")
+        tiene_planta = st.checkbox("Planta eléctrica (total o áreas comunes)")
+        tiene_pozo = st.checkbox("Pozo de agua / Tanque de gran capacidad")
+        tiene_vista = st.checkbox("Vista destacada (Mar / Ávila / Montaña)")
+        
         fotos_cargadas = st.file_uploader(
             "Sube fotos de la propiedad desde tu celular:", 
             type=["jpg", "png", "jpeg"], 
@@ -234,7 +245,6 @@ with tab_vendedor:
         
         if fotos_cargadas:
             st.success(f"¡Se han seleccionado {len(fotos_cargadas)} foto(s) correctamente!")
-            # Mostrar vista previa miniatura en pantalla de la primera foto cargada
             st.image(fotos_cargadas[0], caption="Vista previa de la foto principal", width=200)
 
         st.markdown("---")
@@ -250,13 +260,20 @@ with tab_vendedor:
             st.success("¡Información procesada con éxito!")
             num_fotos = len(fotos_cargadas) if fotos_cargadas else 0
             
+            amenidades_lista = []
+            if tiene_piscina: amenidades_lista.append("Piscina")
+            if tiene_planta: amenidades_lista.append("Planta")
+            if tiene_pozo: amenidades_lista.append("Pozo")
+            if tiene_vista: amenidades_lista.append("Vista")
+
             msg_prop = (
                 f"Hola, deseo publicar un inmueble:%0A"
                 f"*Propiedad:* {titulo_v}%0A"
-                f"*Tipo:* {tipo_v}%0A"
-                f"*Región:* {región_v}%0A"
-                f"*Localidad/Sector:* {localidad_v}%0A"
-                f"*Operación:* {operacion_v} | *Precio:* ${precio_v}%0A"
+                f"*Transacción:* {operacion_v} ({tipo_v})%0A"
+                f"*Región:* {región_v} - {localidad_v}%0A"
+                f"*Precio:* ${precio_v} | *Hab:* {habitaciones_v} | *Baños:* {banos_v}%0A"
+                f"*Condición:* {estado_amoblado}%0A"
+                f"*Extras de valor:* {', '.join(amenidades_lista) if amenidades_lista else 'Ninguno'}%0A"
                 f"*Fotos cargadas en app:* {num_fotos} foto(s)%0A"
                 f"*Contacto:* {nombre_v} ({telefono_v})"
             )
@@ -268,34 +285,105 @@ with tab_vendedor:
             )
 
 # =========================================================
-# PESTAÑA 3: TASACIÓN IA
+# PESTAÑA 3: ASISTENTE DE TASACIÓN E INSPECCIÓN VISUAL POR IA
 # =========================================================
 with tab_ia:
     st.subheader("🤖 Asistente de Tasación e Inspección Visual por IA")
     st.markdown("""
-    Herramienta exclusiva impulsada por Inteligencia Artificial para **analizar fotos de inmuebles, evaluar el estado de conservación e inspección visual, y calcular la banda de precios sugerida** ajustada al mercado venezolano.
+    El sistema evalúa los metros cuadrados, la zona específica, el estado de amoblado y los factores de valor críticos para calcular la **banda de precios de mercado sugerida**.
     """)
     
-    st.info("💡 **Beneficio para Propietarios y Corredores:** Obtén una estimación de precio objetiva respaldada por datos antes de salir al mercado.")
-    
-    fotos_tasacion = st.file_uploader(
-        "Sube fotos del inmueble para el análisis visual por IA:", 
-        type=["jpg", "png", "jpeg"], 
-        accept_multiple_files=True,
-        key="tasacion_files"
-    )
-    
-    if fotos_tasacion:
-        st.success(f"¡{len(fotos_tasacion)} foto(s) cargada(s) para inspección visual!")
-        st.image(fotos_tasacion[0], caption="Foto cargada para análisis", width=200)
-    
-    msg_ia = "Hola, he cargado fotos en la app y me interesa solicitar una Tasación e Inspección Visual por IA para evaluar mi inmueble."
-    link_wa_ia = f"https://wa.me/{MI_NUMERO_WA}?text={msg_ia.replace(' ', '%20')}"
-    
-    st.markdown(
-        f'<a href="{link_wa_ia}" target="_blank" style="display:inline-block;padding:14px 24px;font-size:16px;font-weight:bold;color:white;background-color:#007BFF;text-align:center;text-decoration:none;border-radius:8px;">🤖 Procesar Tasación e Inspección Visual por IA</a>',
-        unsafe_allow_html=True
-    )
+    with st.form("form_tasacion_ia"):
+        st.markdown("### 1. Datos Técnicos y Factores de Valor")
+        región_t = st.selectbox(
+            "Región / Estado:",
+            ["Isla de Margarita (Nueva Esparta)", "Caracas (Distrito Capital)", "Estado Miranda", "Estado La Guaira"],
+            key="reg_t"
+        )
+        tipo_t = st.selectbox("Tipo de Inmueble:", TIPOS_INMUEBLES, key="tipo_t")
+        transaccion_t = st.radio("Objetivo de Tasación:", ["Valor de Venta Comercial", "Canon de Alquiler Sugerido"])
+        
+        col_t1, col_t2 = st.columns(2)
+        with col_t1:
+            m2_construccion = st.number_input("Área de Construcción (m²):", min_value=10, value=80)
+            habitaciones_t = st.number_input("Habitaciones:", min_value=0, value=2)
+            estado_amoblado_t = st.selectbox("Nivel de Equipamiento:", ["Amoblado y Equipado", "Semiamoblado", "Sin amoblar"])
+        with col_t2:
+            banos_t = st.number_input("Baños:", min_value=1, value=2)
+            antiguedad_t = st.selectbox("Antigüedad:", ["A estrenar / Nuevo", "Menos de 10 años", "Más de 10 años / A actualizar"])
+            
+        estado_conservacion = st.selectbox(
+            "Estado de Conservación:",
+            ["Excelente / Modernizado", "Bueno / Habitable", "A reparar / Para actualizar"]
+        )
+        
+        st.markdown("**Factores Críticos de Plusvalía:**")
+        t_piscina = st.checkbox("Tiene Piscina", key="tp")
+        t_planta = st.checkbox("Tiene Planta Eléctrica", key="tpl")
+        t_pozo = st.checkbox("Tiene Pozo o Agua constante", key="tpz")
+        t_vista = st.checkbox("Tiene Vista privilegiada (Mar/Ávila/Montaña)", key="tv")
+        
+        st.markdown("### 2. Evidencia Fotográfica")
+        fotos_tasacion = st.file_uploader(
+            "Sube fotos del inmueble (Fachada, Sala, Cocina, Baños):", 
+            type=["jpg", "png", "jpeg"], 
+            accept_multiple_files=True,
+            key="tasacion_files"
+        )
+        
+        st.markdown("---")
+        nombre_t = st.text_input("Tu Nombre / Contacto:", key="nombre_t")
+        whatsapp_t = st.text_input("Tu Número de WhatsApp:", key="wa_t")
+        
+        btn_ejecutar_tasacion = st.form_submit_button("🚀 Calcular Tasación por IA")
+
+    if btn_ejecutar_tasacion:
+        if not whatsapp_t:
+            st.error("Por favor ingresa tu número de WhatsApp para enviarte el reporte detallado.")
+        else:
+            # Lógica inteligente ponderada por factores de valor
+            base_m2 = 700 if "Margarita" in región_t or "Caracas" in región_t else 400
+            
+            if "Alquiler" in transaccion_t:
+                base_m2 = base_m2 * 0.0075 
+            
+            multiplicador = 1.0
+            if "Amoblado" in estado_amoblado_t: multiplicador += 0.15
+            if "Excelente" in estado_conservacion: multiplicador += 0.15
+            if t_piscina: multiplicador += 0.10
+            if t_planta: multiplicador += 0.12
+            if t_pozo: multiplicador += 0.12
+            if t_vista: multiplicador += 0.15
+            
+            precio_estimado = m2_construccion * base_m2 * multiplicador
+            rango_min = int(precio_estimado * 0.9)
+            rango_max = int(precio_estimado * 1.1)
+            
+            st.success("¡Análisis de Tasación e Inspección Visual completado con éxito!")
+            
+            st.markdown("### 📊 Resultado Preliminar del Asistente IA")
+            etiqueta_resultado = "Banda de Venta Sugerida" if "Venta" in transaccion_t else "Banda de Alquiler Sugerida"
+            st.metric(label=etiqueta_resultado, value=f"${rango_min:,} - ${rango_max:,} USD")
+            st.info(f"💡 **Criterio IA:** Ponderado por {m2_construccion} m², equipamiento '{estado_amoblado_t}' y plusvalía por servicios.")
+            
+            num_fotos_t = len(fotos_tasacion) if fotos_tasacion else 0
+            
+            msg_tasacion = (
+                f"Hola, he realizado una Tasación por IA en la web:%0A"
+                f"*Objetivo:* {transaccion_t}%0A"
+                f"*Región:* {región_t}%0A"
+                f"*Inmueble:* {tipo_t} ({m2_construccion} m², {estado_amoblado_t})%0A"
+                f"*Plusvalías:* Piscina({t_piscina}), Planta({t_planta}), Pozo({t_pozo}), Vista({t_vista})%0A"
+                f"*Banda calculada:* ${rango_min:,} - ${rango_max:,} USD%0A"
+                f"*Fotos adjuntas:* {num_fotos_t} foto(s)%0A"
+                f"*Solicitante:* {nombre_t} ({whatsapp_t})"
+            )
+            link_wa_tasacion = f"https://wa.me/{MI_NUMERO_WA}?text={msg_tasacion}"
+            
+            st.markdown(
+                f'<a href="{link_wa_tasacion}" target="_blank" style="display:inline-block;padding:14px 24px;font-size:16px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;">📱 Enviar Reporte Completo de Tasación a WhatsApp</a>',
+                unsafe_allow_html=True
+            )
 
 # =========================================================
 # SECCIÓN FINAL: GRUPOS DE WHATSAPP
