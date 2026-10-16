@@ -30,7 +30,7 @@ def cargar_inventario(url):
 
 df_inmuebles = cargar_inventario(SHEET_URL)
 
-# --- BANNER SUPERIOR DE GRUPOS DE WHATSAPP ---
+# --- BANNER SUPERIOR GRUPOS DE WHATSAPP ---
 st.info("💬 **¿Quieres unirte a nuestras comunidades activas en WhatsApp?**")
 col_top1, col_top2 = st.columns(2)
 with col_top1:
@@ -46,7 +46,7 @@ with col_top2:
 
 st.markdown("---")
 
-# --- LISTAS DE LOCALIDADES ---
+# --- LISTAS DE LOCALIDADES DEDICADAS ---
 LOCALIDADES_MARGARITA = [
     "Porlamar (Municipio Mariño)",
     "Pampatar (Municipio Maneiro)",
@@ -70,12 +70,10 @@ LOCALIDADES_CARACAS = [
 ]
 
 LOCALIDADES_MIRANDA = [
-    "--- EJE BARLOVENTO ---",
     "Andrés Bello: San José de Barlovento",
     "Páez: Río Chico",
     "Buroz: Mamporal",
     "Pedro Gual: Cúpira",
-    "--- OTROS MUNICIPIOS DE MIRANDA ---",
     "Guarenas / Guatire (Plaza y Zamora)",
     "Los Teques / Carrizal / Los Salias (Altos Mirandinos)",
     "Valles del Tuy (Cúa, Ocumare, Charallave, Santa Teresa)",
@@ -112,31 +110,36 @@ tab_comprador, tab_vendedor, tab_ia = st.tabs([
 ])
 
 # =========================================================
-# PESTAÑA 1: COMPRADORES (BÚSQUEDA Y REQUERIMIENTO)
+# PESTAÑA 1: COMPRADORES
 # =========================================================
 with tab_comprador:
     st.subheader("Búsqueda de Inmuebles y Registro de Requerimiento")
     
-    with st.form("form_comprador"):
-        nicho = st.selectbox(
-            "Selecciona el Estado o Región principal:",
-            [
-                "Isla de Margarita (Nueva Esparta)", 
-                "Caracas (Distrito Capital)", 
-                "Estado Miranda", 
-                "Estado La Guaira"
-            ]
-        )
+    # REGIONALIZACIÓN FUERA DEL FORMULARIO PARA REACTIVIDAD INMEDIATA
+    nicho = st.selectbox(
+        "1. Selecciona el Estado o Región principal:",
+        [
+            "Isla de Margarita (Nueva Esparta)", 
+            "Caracas (Distrito Capital)", 
+            "Estado Miranda", 
+            "Estado La Guaira"
+        ],
+        key="nicho_c_reactivo"
+    )
+    
+    # Determinar las localidades según la elección
+    if "Margarita" in nicho:
+        loc_opciones = LOCALIDADES_MARGARITA
+    elif "Caracas" in nicho:
+        loc_opciones = LOCALIDADES_CARACAS
+    elif "Miranda" in nicho:
+        loc_opciones = LOCALIDADES_MIRANDA
+    else:
+        loc_opciones = LOCALIDADES_LA_GUAIRA
         
-        if "Margarita" in nicho:
-            localidad = st.selectbox("Selecciona la localidad:", LOCALIDADES_MARGARITA)
-        elif "Caracas" in nicho:
-            localidad = st.selectbox("Selecciona el municipio o sector de Caracas:", LOCALIDADES_CARACAS)
-        elif "Miranda" in nicho:
-            localidad = st.selectbox("Selecciona la localidad de Miranda:", LOCALIDADES_MIRANDA)
-        else:
-            localidad = st.selectbox("Selecciona la parroquia o sector de La Guaira:", LOCALIDADES_LA_GUAIRA)
+    localidad = st.selectbox("2. Selecciona la localidad o sector:", loc_opciones, key="loc_c_reactivo")
 
+    with st.form("form_comprador_detalles"):
         operacion = st.radio("Operación:", ["Comprar", "Alquilar"])
         tipo_inmueble = st.selectbox("Tipo de propiedad:", TIPOS_INMUEBLES)
         presupuesto_max = st.number_input("Presupuesto máximo ($):", min_value=0, value=50000, step=2500)
@@ -191,41 +194,42 @@ with tab_comprador:
             )
 
 # =========================================================
-# PESTAÑA 2: VENDEDORES / ALIADOS (REGISTRO DE INMUEBLE)
+# PESTAÑA 2: VENDEDORES / ALIADOS
 # =========================================================
 with tab_vendedor:
     st.subheader("Publica o Registra tu Inmueble")
-    st.markdown("Sube las fotos de tu propiedad directamente desde tu teléfono y completa los datos básicos.")
     
-    with st.form("form_vendedor"):
-        región_v = st.selectbox(
-            "Estado o Región:",
-            [
-                "Isla de Margarita (Nueva Esparta)", 
-                "Caracas (Distrito Capital)", 
-                "Estado Miranda", 
-                "Estado La Guaira"
-            ],
-            key="reg_v"
-        )
+    # REGIONALIZACIÓN FUERA DEL FORMULARIO
+    región_v = st.selectbox(
+        "1. Estado o Región de la propiedad:",
+        [
+            "Isla de Margarita (Nueva Esparta)", 
+            "Caracas (Distrito Capital)", 
+            "Estado Miranda", 
+            "Estado La Guaira"
+        ],
+        key="reg_v_reactivo"
+    )
+    
+    if "Margarita" in región_v:
+        loc_v_opciones = LOCALIDADES_MARGARITA
+    elif "Caracas" in región_v:
+        loc_v_opciones = LOCALIDADES_CARACAS
+    elif "Miranda" in región_v:
+        loc_v_opciones = LOCALIDADES_MIRANDA
+    else:
+        loc_v_opciones = LOCALIDADES_LA_GUAIRA
         
-        if "Margarita" in región_v:
-            localidad_v = st.selectbox("Localidad:", LOCALIDADES_MARGARITA, key="loc_v_marg")
-        elif "Caracas" in región_v:
-            localidad_v = st.selectbox("Municipio o sector de Caracas:", LOCALIDADES_CARACAS, key="loc_v_car")
-        elif "Miranda" in región_v:
-            localidad_v = st.selectbox("Localidad de Miranda:", LOCALIDADES_MIRANDA, key="loc_v_mir")
-        else:
-            localidad_v = st.selectbox("Localidad de La Guaira:", LOCALIDADES_LA_GUAIRA, key="loc_v_lag")
+    localidad_v = st.selectbox("2. Localidad o Sector:", loc_v_opciones, key="loc_v_reactivo")
 
+    with st.form("form_vendedor_detalles"):
         titulo_v = st.text_input("Título o breve descripción (ej: Casa 3 hab en Río Chico):")
         tipo_v = st.selectbox("Tipo:", TIPOS_INMUEBLES, key="tipo_v")
         operacion_v = st.radio("Operación:", ["Venta", "Alquiler"], key="op_v")
         precio_v = st.number_input("Precio ($ USD):", min_value=0, value=30000, step=1000)
         
-        # --- CARGA DIRECTA DE FOTOS DESDE EL TELÉFONO ---
         fotos_cargadas = st.file_uploader(
-            "Sube fotos de la propiedad (puedes seleccionar varias):", 
+            "Sube fotos de la propiedad desde tu celular:", 
             type=["jpg", "png", "jpeg"], 
             accept_multiple_files=True
         )
@@ -241,17 +245,16 @@ with tab_vendedor:
             st.error("Por favor completa el título de la propiedad y tu teléfono.")
         else:
             st.success("¡Fotos e información procesadas con éxito!")
-            
-            # Contar cuántas fotos subió
             num_fotos = len(fotos_cargadas) if fotos_cargadas else 0
             
             msg_prop = (
                 f"Hola, deseo publicar un inmueble:%0A"
                 f"*Propiedad:* {titulo_v}%0A"
                 f"*Tipo:* {tipo_v}%0A"
-                f"*Región:* {región_v} ({localidad_v})%0A"
+                f"*Región:* {región_v}%0A"
+                f"*Localidad/Sector:* {localidad_v}%0A"
                 f"*Operación:* {operacion_v} | *Precio:* ${precio_v}%0A"
-                f"*Fotos adjuntas en app:* {num_fotos} foto(s) cargada(s)%0A"
+                f"*Fotos adjuntas en app:* {num_fotos} foto(s)%0A"
                 f"*Contacto:* {nombre_v} ({telefono_v})"
             )
             link_wa_v = f"https://wa.me/{MI_NUMERO_WA}?text={msg_prop}"
@@ -262,7 +265,7 @@ with tab_vendedor:
             )
 
 # =========================================================
-# PESTAÑA 3: ASISTENTE DE TASACIÓN E INSPECCIÓN VISUAL POR IA
+# PESTAÑA 3: TASACIÓN IA
 # =========================================================
 with tab_ia:
     st.subheader("🤖 Asistente de Tasación e Inspección Visual por IA")
@@ -272,7 +275,6 @@ with tab_ia:
     
     st.info("💡 **Beneficio para Propietarios y Corredores:** Obtén una estimación de precio objetiva respaldada por datos antes de salir al mercado.")
     
-    # Carga de fotos para la IA de Tasación
     fotos_tasacion = st.file_uploader(
         "Sube fotos del inmueble para el análisis visual por IA:", 
         type=["jpg", "png", "jpeg"], 
@@ -280,11 +282,8 @@ with tab_ia:
         key="tasacion_files"
     )
     
-    if fotos_tasacion:
-        st.success(f"¡{len(fotos_tasacion)} foto(s) lista(s) para inspección visual!")
-    
     msg_ia = "Hola, he subido fotos en la app y me interesa solicitar una Tasación e Inspección Visual por IA para evaluar mi inmueble."
-    link_wa_ia = f"https://wa.me/{MI_NUMERO_WA}?text={msg_ia.replace(' ', '%20')}"
+    link_wa_ia = f"https://wa.me/{584124792652}?text={msg_ia.replace(' ', '%20')}"
     
     st.markdown(
         f'<a href="{link_wa_ia}" target="_blank" style="display:inline-block;padding:14px 24px;font-size:16px;font-weight:bold;color:white;background-color:#007BFF;text-align:center;text-decoration:none;border-radius:8px;">🤖 Procesar Tasación e Inspección Visual por IA</a>',
@@ -301,7 +300,7 @@ col_g1, col_g2 = st.columns(2)
 with col_g1:
     st.markdown("##### 🌴 Margarita")
     st.markdown(
-        f'<a href="{LINK_GRUPO_MARGARITA}" target="_blank" style="display:inline-block;padding:10px 14px;font-size:14px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:6px;">Unirme al Grupo Margarita</a>',
+        f'<a href="{LINK_GRUPO_MARGARITA}" style="display:inline-block;padding:10px 14px;font-size:14px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:6px;">Unirme al Grupo Margarita</a>',
         unsafe_allow_html=True
     )
 
@@ -310,4 +309,5 @@ with col_g2:
     st.markdown(
         f'<a href="{LINK_GRUPO_CARACAS}" target="_blank" style="display:inline-block;padding:10px 14px;font-size:14px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:6px;">Unirme al Grupo Caracas</a>',
         unsafe_allow_html=True
-    )
+)
+        
