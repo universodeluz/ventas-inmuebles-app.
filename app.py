@@ -115,7 +115,6 @@ tab_comprador, tab_vendedor, tab_ia = st.tabs([
 with tab_comprador:
     st.subheader("Búsqueda de Inmuebles y Registro de Requerimiento")
     
-    # REGIONALIZACIÓN FUERA DEL FORMULARIO PARA REACTIVIDAD INMEDIATA
     nicho = st.selectbox(
         "1. Selecciona el Estado o Región principal:",
         [
@@ -127,7 +126,6 @@ with tab_comprador:
         key="nicho_c_reactivo"
     )
     
-    # Determinar las localidades según la elección
     if "Margarita" in nicho:
         loc_opciones = LOCALIDADES_MARGARITA
     elif "Caracas" in nicho:
@@ -199,7 +197,6 @@ with tab_comprador:
 with tab_vendedor:
     st.subheader("Publica o Registra tu Inmueble")
     
-    # REGIONALIZACIÓN FUERA DEL FORMULARIO
     región_v = st.selectbox(
         "1. Estado o Región de la propiedad:",
         [
@@ -228,12 +225,18 @@ with tab_vendedor:
         operacion_v = st.radio("Operación:", ["Venta", "Alquiler"], key="op_v")
         precio_v = st.number_input("Precio ($ USD):", min_value=0, value=30000, step=1000)
         
+        # Carga visual de fotos en pantalla
         fotos_cargadas = st.file_uploader(
             "Sube fotos de la propiedad desde tu celular:", 
             type=["jpg", "png", "jpeg"], 
             accept_multiple_files=True
         )
         
+        if fotos_cargadas:
+            st.success(f"¡Se han seleccionado {len(fotos_cargadas)} foto(s) correctamente!")
+            # Mostrar vista previa miniatura en pantalla de la primera foto cargada
+            st.image(fotos_cargadas[0], caption="Vista previa de la foto principal", width=200)
+
         st.markdown("---")
         nombre_v = st.text_input("Nombre del Propietario / Agente:", key="nombre_v")
         telefono_v = st.text_input("WhatsApp de Contacto:", key="tel_v")
@@ -244,7 +247,7 @@ with tab_vendedor:
         if not titulo_v or not telefono_v:
             st.error("Por favor completa el título de la propiedad y tu teléfono.")
         else:
-            st.success("¡Fotos e información procesadas con éxito!")
+            st.success("¡Información procesada con éxito!")
             num_fotos = len(fotos_cargadas) if fotos_cargadas else 0
             
             msg_prop = (
@@ -254,13 +257,13 @@ with tab_vendedor:
                 f"*Región:* {región_v}%0A"
                 f"*Localidad/Sector:* {localidad_v}%0A"
                 f"*Operación:* {operacion_v} | *Precio:* ${precio_v}%0A"
-                f"*Fotos adjuntas en app:* {num_fotos} foto(s)%0A"
+                f"*Fotos cargadas en app:* {num_fotos} foto(s)%0A"
                 f"*Contacto:* {nombre_v} ({telefono_v})"
             )
             link_wa_v = f"https://wa.me/{MI_NUMERO_WA}?text={msg_prop}"
             
             st.markdown(
-                f'<a href="{link_wa_v}" target="_blank" style="display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;">📱 Enviar Publicación con Fotos a WhatsApp</a>',
+                f'<a href="{link_wa_v}" target="_blank" style="display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;">📱 Enviar Notificación con Detalles a WhatsApp</a>',
                 unsafe_allow_html=True
             )
 
@@ -282,8 +285,12 @@ with tab_ia:
         key="tasacion_files"
     )
     
-    msg_ia = "Hola, he subido fotos en la app y me interesa solicitar una Tasación e Inspección Visual por IA para evaluar mi inmueble."
-    link_wa_ia = f"https://wa.me/{584124792652}?text={msg_ia.replace(' ', '%20')}"
+    if fotos_tasacion:
+        st.success(f"¡{len(fotos_tasacion)} foto(s) cargada(s) para inspección visual!")
+        st.image(fotos_tasacion[0], caption="Foto cargada para análisis", width=200)
+    
+    msg_ia = "Hola, he cargado fotos en la app y me interesa solicitar una Tasación e Inspección Visual por IA para evaluar mi inmueble."
+    link_wa_ia = f"https://wa.me/{MI_NUMERO_WA}?text={msg_ia.replace(' ', '%20')}"
     
     st.markdown(
         f'<a href="{link_wa_ia}" target="_blank" style="display:inline-block;padding:14px 24px;font-size:16px;font-weight:bold;color:white;background-color:#007BFF;text-align:center;text-decoration:none;border-radius:8px;">🤖 Procesar Tasación e Inspección Visual por IA</a>',
@@ -300,7 +307,7 @@ col_g1, col_g2 = st.columns(2)
 with col_g1:
     st.markdown("##### 🌴 Margarita")
     st.markdown(
-        f'<a href="{LINK_GRUPO_MARGARITA}" style="display:inline-block;padding:10px 14px;font-size:14px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:6px;">Unirme al Grupo Margarita</a>',
+        f'<a href="{LINK_GRUPO_MARGARITA}" target="_blank" style="display:inline-block;padding:10px 14px;font-size:14px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:6px;">Unirme al Grupo Margarita</a>',
         unsafe_allow_html=True
     )
 
@@ -309,5 +316,4 @@ with col_g2:
     st.markdown(
         f'<a href="{LINK_GRUPO_CARACAS}" target="_blank" style="display:inline-block;padding:10px 14px;font-size:14px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:6px;">Unirme al Grupo Caracas</a>',
         unsafe_allow_html=True
-)
-        
+    )
