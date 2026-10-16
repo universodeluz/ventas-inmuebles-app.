@@ -9,18 +9,16 @@ st.set_page_config(
 )
 
 st.title("🏢 Ventas Inmuebles Venezuela")
-st.caption("Conectando compradores, propietarios y tecnología inmobiliaria en Nueva Esparta y Región Capital/La Guaira.")
+st.caption("Conectando compradores, propietarios y tecnología inmobiliaria en Nueva Esparta, Caracas, Miranda y La Guaira.")
 
 # --- CONEXIÓN A GOOGLE SHEETS ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1AkLUKg1FgjgEPeJmSY9oE-1v2Sgld8-4wsu8og3XMEU/export?format=csv"
 
 # --- CONFIGURACIÓN DE CONTACTOS Y GRUPOS ---
-# Tu número de WhatsApp de contacto privado (sin el +)
 MI_NUMERO_WA = "584124792652" 
 
-# PEGA AQUÍ LOS ENLACES DE INVITACIÓN REALES DE TUS GRUPOS DE WHATSAPP
-LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/TU_ENLACE_MARGARITA_AQUI"
-LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/TU_ENLACE_CARACAS_AQUI"
+LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
+LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
 
 @st.cache_data(ttl=300)
 def cargar_inventario(url):
@@ -48,7 +46,7 @@ with col_top2:
 
 st.markdown("---")
 
-# LISTAS DE LOCALIDADES POR REGIÓN
+# --- LISTAS DE LOCALIDADES POR REGIÓN ---
 LOCALIDADES_MARGARITA = [
     "Porlamar (Municipio Mariño)",
     "Pampatar (Municipio Maneiro)",
@@ -62,13 +60,26 @@ LOCALIDADES_MARGARITA = [
     "Otra localidad de Nueva Esparta"
 ]
 
-LOCALIDADES_MIRANDA_BARLOVENTO = [
+LOCALIDADES_CARACAS = [
+    "Libertador (Centro, El Recreo, Candelaria, San Bernardino, etc.)",
+    "Chacao",
+    "Baruta",
+    "El Hatillo",
+    "Sucre (Petare)",
+    "Otro sector de Caracas"
+]
+
+LOCALIDADES_MIRANDA = [
+    "--- EJE BARLOVENTO ---",
     "Andrés Bello: San José de Barlovento",
     "Páez: Río Chico",
     "Buroz: Mamporal",
     "Pedro Gual: Cúpira",
-    "Área Metropolitana de Caracas / Miranda (Chacao, Baruta, El Hatillo, Sucre, etc.)",
-    "Otra zona de Miranda"
+    "--- OTROS MUNICIPIOS DE MIRANDA ---",
+    "Guarenas / Guatire (Plaza y Zamora)",
+    "Los Teques / Carrizal / Los Salias (Altos Mirandinos)",
+    "Valles del Tuy (Cúa, Ocumare, Charallave, Santa Teresa)",
+    "Otro sector de Miranda"
 ]
 
 LOCALIDADES_LA_GUAIRA = [
@@ -79,10 +90,9 @@ LOCALIDADES_LA_GUAIRA = [
     "Caraballeda",
     "Naiguatá",
     "Caruao",
-    "Otras localidades y sectores del Estado La Guaira"
+    "Otras localidades del Estado La Guaira"
 ]
 
-# OPCIONES DE TIPOS DE INMUEBLES (INCLUYE POSADA / HOTEL)
 TIPOS_INMUEBLES = [
     "Apartamento", 
     "Casa", 
@@ -110,15 +120,23 @@ with tab_comprador:
     with st.form("form_comprador"):
         nicho = st.selectbox(
             "Selecciona el Estado o Región principal:",
-            ["Isla de Margarita (Nueva Esparta)", "Miranda (Eje Barlovento / Caracas)", "Estado La Guaira"]
+            [
+                "Isla de Margarita (Nueva Esparta)", 
+                "Caracas (Distrito Capital)", 
+                "Estado Miranda", 
+                "Estado La Guaira"
+            ]
         )
         
+        # Desplegar sub-localidades exactas según la región elegida
         if "Margarita" in nicho:
-            localidad = st.selectbox("Selecciona la localidad o municipio:", LOCALIDADES_MARGARITA)
+            localidad = st.selectbox("Selecciona la localidad:", LOCALIDADES_MARGARITA)
+        elif "Caracas" in nicho:
+            localidad = st.selectbox("Selecciona el municipio o sector de Caracas:", LOCALIDADES_CARACAS)
         elif "Miranda" in nicho:
-            localidad = st.selectbox("Selecciona la localidad o municipio:", LOCALIDADES_MIRANDA_BARLOVENTO)
+            localidad = st.selectbox("Selecciona la localidad o municipio de Miranda:", LOCALIDADES_MIRANDA)
         else:
-            localidad = st.selectbox("Selecciona la parroquia o sector:", LOCALIDADES_LA_GUAIRA)
+            localidad = st.selectbox("Selecciona la parroquia o sector de La Guaira:", LOCALIDADES_LA_GUAIRA)
 
         operacion = st.radio("Operación:", ["Comprar", "Alquilar"])
         tipo_inmueble = st.selectbox("Tipo de propiedad:", TIPOS_INMUEBLES)
@@ -182,18 +200,25 @@ with tab_vendedor:
     with st.form("form_vendedor"):
         región_v = st.selectbox(
             "Estado o Región:",
-            ["Isla de Margarita (Nueva Esparta)", "Miranda (Eje Barlovento / Caracas)", "Estado La Guaira"],
+            [
+                "Isla de Margarita (Nueva Esparta)", 
+                "Caracas (Distrito Capital)", 
+                "Estado Miranda", 
+                "Estado La Guaira"
+            ],
             key="reg_v"
         )
         
         if "Margarita" in región_v:
-            localidad_v = st.selectbox("Localidad / Municipio:", LOCALIDADES_MARGARITA, key="loc_v_marg")
+            localidad_v = st.selectbox("Localidad:", LOCALIDADES_MARGARITA, key="loc_v_marg")
+        elif "Caracas" in región_v:
+            localidad_v = st.selectbox("Municipio o sector de Caracas:", LOCALIDADES_CARACAS, key="loc_v_car")
         elif "Miranda" in región_v:
-            localidad_v = st.selectbox("Localidad / Municipio:", LOCALIDADES_MIRANDA_BARLOVENTO, key="loc_v_mir")
+            localidad_v = st.selectbox("Localidad de Miranda:", LOCALIDADES_MIRANDA, key="loc_v_mir")
         else:
-            localidad_v = st.selectbox("Localidad / Parroquia:", LOCALIDADES_LA_GUAIRA, key="loc_v_lag")
+            localidad_v = st.selectbox("Localidad de La Guaira:", LOCALIDADES_LA_GUAIRA, key="loc_v_lag")
 
-        titulo_v = st.text_input("Título o breve descripción (ej: Posada 8 hab en Playa El Agua):")
+        titulo_v = st.text_input("Título o breve descripción (ej: Casa 3 hab en Río Chico):")
         tipo_v = st.selectbox("Tipo:", TIPOS_INMUEBLES, key="tipo_v")
         operacion_v = st.radio("Operación:", ["Venta", "Alquiler"], key="op_v")
         precio_v = st.number_input("Precio ($ USD):", min_value=0, value=30000, step=1000)
@@ -265,5 +290,5 @@ with col_g2:
     st.markdown(
         f'<a href="{LINK_GRUPO_CARACAS}" target="_blank" style="display:inline-block;padding:10px 14px;font-size:14px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:6px;">Unirme al Grupo Caracas</a>',
         unsafe_allow_html=True
-            )
-                        
+)
+        
