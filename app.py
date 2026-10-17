@@ -418,7 +418,7 @@ with tab_ia:
             
             num_fotos_t = len(fotos_tasacion) if fotos_tasacion else 0
             
-            msg_tasacion = (
+                        msg_tasacion = (
                 f"Hola, he realizado una Tasación por IA en la web:%0A"
                 f"*Objetivo:* {transaccion_t}%0A"
                 f"*Región:* {región_t} - {localidad_t}%0A"
@@ -432,4 +432,7 @@ with tab_ia:
             link_wa_tasacion = f"https://wa.me/{MI_NUMERO_WA}?text={msg_tasacion}"
             
             st.markdown(
-                f'<a href="{link_wa_tasacion}" target="_blank" style="display:inline-block;padding:14px 24px;font-size:16px;font-weight:bo
+                f'<a href="{link_wa_tasacion}" target="_blank" style="display:inline-block;padding:14px 24px;font-size:16px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;">📱 Enviar Reporte Completo de Tasación a WhatsApp</a>',
+                unsafe_allow_html=True
+)
+            
