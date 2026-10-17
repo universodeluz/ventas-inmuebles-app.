@@ -2,4 +2,7 @@ streamlit
 pandas
 cloudinary
 pillow
+pillow-heif
+
+
 
