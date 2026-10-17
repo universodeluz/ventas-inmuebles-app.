@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import cloudinary
+import cloudinary.uploader
 
 # Configuración de la página
 st.set_page_config(
@@ -10,6 +12,17 @@ st.set_page_config(
 
 st.title("🏢 Ventas Inmuebles Venezuela")
 st.caption("Conectando compradores, propietarios y tecnología inmobiliaria en Nueva Esparta, Caracas, Miranda y La Guaira.")
+
+# --- CONFIGURACIÓN Y CONEXIÓN DE CLOUDINARY ---
+try:
+    cloudinary.config(
+        cloud_name=st.secrets["CLOUDINARY_CLOUD_NAME"],
+        api_key=st.secrets["CLOUDINARY_API_KEY"],
+        api_secret=st.secrets["CLOUDINARY_API_SECRET"]
+    )
+    CLOUDINARY_ACTIVO = True
+except Exception:
+    CLOUDINARY_ACTIVO = False
 
 # --- CONEXIÓN A GOOGLE SHEETS ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1AkLUKg1FgjgEPeJmSY9oE-1v2Sgld8-4wsu8og3XMEU/export?format=csv"
@@ -190,10 +203,10 @@ with tab_comprador:
             )
 
 # =========================================================
-# PESTAÑA 2: VENDEDORES / ALIADOS
+# PESTAÑA 2: VENDEDORES / ALIADOS (CON CLOUDINARY)
 # =========================================================
 with tab_vendedor:
-    st.subheader("Publica o Registra tu Inmueble con Metrajes y Factores de Valor")
+    st.subheader("Publica o Registra tu Inmueble")
     
     región_v = st.selectbox(
         "1. Estado o Región de la propiedad:",
@@ -238,29 +251,38 @@ with tab_vendedor:
             type=["jpg", "png", "jpeg"], 
             accept_multiple_files=True
         )
-        
-        if fotos_cargadas:
-            st.success(f"¡Se han seleccionado {len(fotos_cargadas)} foto(s) correctamente!")
-            st.image(fotos_cargadas[0], caption="Vista previa de la foto principal", width=200)
 
         st.markdown("---")
         nombre_v = st.text_input("Nombre del Propietario / Agente:", key="nombre_v")
         telefono_v = st.text_input("WhatsApp de Contacto:", key="tel_v")
         
-        btn_vendedor = st.form_submit_button("📤 Registrar Inmueble y Notificar")
+        btn_vendedor = st.form_submit_button("📤 Registrar Inmueble y Subir Fotos a la Nube")
         
     if btn_vendedor:
         if not titulo_v or not telefono_v:
             st.error("Por favor completa el título de la propiedad y tu teléfono.")
         else:
-            st.success("¡Información procesada con éxito!")
-            num_fotos = len(fotos_cargadas) if fotos_cargadas else 0
+            urls_fotos = []
+            
+            # SUBIDA A CLOUDINARY
+            if fotos_cargadas and CLOUDINARY_ACTIVO:
+                with st.spinner("☁️ Subiendo fotografías a Cloudinary..."):
+                    for foto in fotos_cargadas:
+                        try:
+                            res = cloudinary.uploader.upload(foto)
+                            urls_fotos.append(res.get("secure_url"))
+                        except Exception as e:
+                            st.warning(f"No se pudo subir una imagen a la nube: {e}")
+                            
+            st.success("¡Propiedad procesada con éxito!")
             
             amenidades_lista = []
             if tiene_piscina: amenidades_lista.append("Piscina")
             if tiene_planta: amenidades_lista.append("Planta")
             if tiene_pozo: amenidades_lista.append("Pozo")
             if tiene_vista: amenidades_lista.append("Vista")
+
+            primer_enlace = urls_fotos[0] if urls_fotos else "Sin foto subida"
 
             msg_prop = (
                 f"Hola, deseo publicar un inmueble:%0A"
@@ -272,13 +294,13 @@ with tab_vendedor:
                 f"*Hab:* {habitaciones_v} | *Baños:* {banos_v}%0A"
                 f"*Condición:* {estado_amoblado}%0A"
                 f"*Extras de valor:* {', '.join(amenidades_lista) if amenidades_lista else 'Ninguno'}%0A"
-                f"*Fotos en app:* {num_fotos} foto(s)%0A"
+                f"*Fotos en la Nube ({len(urls_fotos)}):* {primer_enlace}%0A"
                 f"*Contacto:* {nombre_v} ({telefono_v})"
             )
             link_wa_v = f"https://wa.me/{MI_NUMERO_WA}?text={msg_prop}"
             
             st.markdown(
-                f'<a href="{link_wa_v}" target="_blank" style="display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;">📱 Enviar Notificación con Detalles a WhatsApp</a>',
+                f'<a href="{link_wa_v}" target="_blank" style="display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;">📱 Enviar Notificación con Fotos a WhatsApp</a>',
                 unsafe_allow_html=True
             )
 
@@ -291,7 +313,6 @@ with tab_ia:
     El sistema evalúa de forma independiente los metros de construcción y terreno, adaptando el cálculo al sector exacto seleccionado (como Maneiro, Las Mercedes, El Hatillo, etc.).
     """)
     
-    # SECTORIZACIÓN REACTIVA FUERA DEL FORMULARIO PARA QUE CAMBIE AL INSTANTE
     región_t = st.selectbox(
         "1. Región / Estado:",
         ["Isla de Margarita (Nueva Esparta)", "Caracas (Distrito Capital)", "Estado Miranda", "Estado La Guaira"],
@@ -410,7 +431,4 @@ st.subheader("💬 Únete a nuestras comunidades en WhatsApp")
 col_g1, col_g2 = st.columns(2)
 
 with col_g1:
-    st.link_button("🌴 Grupo Margarita", LINK_GRUPO_MARGARITA, use_container_width=True)
-
-with col_g2:
-    st.link_button("🏢 Grupo Caracas / La Guaira", LINK_GRUPO_CARACAS, use_container_width=True)
+    st.link_button("🌴 Grupo Margarita", LINK_GRUPO_MARGARITA, use_container_width=Tr
