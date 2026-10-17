@@ -19,6 +19,7 @@ MI_NUMERO_WA = "584124792652"
 
 LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
 LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
+
 @st.cache_data(ttl=300)
 def cargar_inventario(url):
     try:
@@ -33,15 +34,9 @@ df_inmuebles = cargar_inventario(SHEET_URL)
 st.info("💬 **¿Quieres unirte a nuestras comunidades activas en WhatsApp?**")
 col_top1, col_top2 = st.columns(2)
 with col_top1:
-    st.markdown(
-        f'<a href="{LINK_GRUPO_MARGARITA}" target="_blank" style="display:block;padding:10px;font-size:13px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:6px;">🌴 Grupo Margarita</a>',
-        unsafe_allow_html=True
-    )
+    st.link_button("🌴 Grupo Margarita", LINK_GRUPO_MARGARITA, use_container_width=True)
 with col_top2:
-    st.markdown(
-        f'<a href="{LINK_GRUPO_CARACAS}" target="_blank" style="display:block;padding:10px;font-size:13px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:6px;">🏢 Grupo Caracas/La Guaira</a>',
-        unsafe_allow_html=True
-    )
+    st.link_button("🏢 Grupo Caracas / La Guaira", LINK_GRUPO_CARACAS, use_container_width=True)
 
 st.markdown("---")
 
@@ -402,14 +397,8 @@ st.subheader("💬 Únete a nuestras comunidades en WhatsApp")
 col_g1, col_g2 = st.columns(2)
 
 with col_g1:
-    st.markdown("##### 🌴 Margarita")
-    st.markdown(
-        f'<a href="{LINK_GRUPO_MARGARITA}" target="_blank" style="display:inline-block;padding:10px 14px;font-size:14px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:6px;">Unirme al Grupo Margarita</a>',
-        unsafe_allow_html=True
-    )
+    st.link_button("🌴 Grupo Margarita", LINK_GRUPO_MARGARITA, use_container_width=True)
 
 with col_g2:
-    st.markdown("##### 🏢 Gran Caracas / La Guaira")
-    st.markdown(
-        f'<a href="{LINK_GRUPO_CARACAS}" target="_blank" style="display:inline-block;padding:10px 14px;font-size:14px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:6px;">Unirme al Grupo Caracas</a>',
-        unsafe_al
+    st.link_button("🏢 Grupo Caracas / La Guaira", LINK_GRUPO_CARACAS, use_container_width=True)
+
