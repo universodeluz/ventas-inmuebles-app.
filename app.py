@@ -431,4 +431,8 @@ st.subheader("💬 Únete a nuestras comunidades en WhatsApp")
 col_g1, col_g2 = st.columns(2)
 
 with col_g1:
-    st.link_button("🌴 Grupo Margarita", LINK_GRUPO_MARGARITA, use_container_width=Tr
+    st.link_button("🌴 Grupo Margarita", LINK_GRUPO_MARGARITA, use_container_width=True)
+
+with col_g2:
+    st.link_button("🏢 Grupo Caracas / La Guaira", LINK_GRUPO_CARACAS, use_container_width=True)
+    
