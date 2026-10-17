@@ -346,7 +346,6 @@ with tab_ia:
         if not whatsapp_t:
             st.error("Por favor ingresa tu número de WhatsApp para enviarte el reporte detallado.")
         else:
-            # Lógica inteligente ponderando construcción y valor adicional por m2 de terreno
             base_m2_const = 750 if "Margarita" in región_t or "Caracas" in región_t else 450
             base_m2_terr = 60 if "Margarita" in región_t or "Caracas" in región_t else 30
             
@@ -362,7 +361,6 @@ with tab_ia:
             if t_pozo: multiplicador += 0.12
             if t_vista: multiplicador += 0.15
             
-            # Cálculo combinando construcción y terreno
             valor_construccion = m2_construccion_t * base_m2_const
             valor_terreno = m2_terreno_t * base_m2_terr
             
@@ -414,4 +412,5 @@ with col_g1:
 with col_g2:
     st.markdown("##### 🏢 Gran Caracas / La Guaira")
     st.markdown(
-        f'<a href="{LINK_GRUPO_CARACAS}" target="_blank" style="display:inline-block;padding:10px 14px;font-size:14px;font-weight
+        f'<a href="{LINK_GRUPO_CARACAS}" target="_blank" style="display:inline-block;padding:10px 14px;font-size:14px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:6px;">Unirme al Grupo Caracas</a>',
+        unsafe_al
