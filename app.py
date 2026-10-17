@@ -282,7 +282,11 @@ with tab_vendedor:
             if tiene_pozo: amenidades_lista.append("Pozo")
             if tiene_vista: amenidades_lista.append("Vista")
 
-            primer_enlace = urls_fotos[0] if urls_fotos else "Sin foto subida"
+                        # Construimos la lista de enlaces de todas las fotos
+            if urls_fotos:
+                enlaces_fotos_str = "%0A".join([f"📷 Foto {i}: {url}" for i, url in enumerate(urls_fotos, start=1)])
+            else:
+                enlaces_fotos_str = "Sin fotos subidas"
 
             msg_prop = (
                 f"Hola, deseo publicar un inmueble:%0A"
@@ -294,7 +298,7 @@ with tab_vendedor:
                 f"*Hab:* {habitaciones_v} | *Baños:* {banos_v}%0A"
                 f"*Condición:* {estado_amoblado}%0A"
                 f"*Extras de valor:* {', '.join(amenidades_lista) if amenidades_lista else 'Ninguno'}%0A"
-                f"*Fotos en la Nube ({len(urls_fotos)}):* {primer_enlace}%0A"
+                f"*Fotos en la Nube ({len(urls_fotos)}):*%0A{enlaces_fotos_str}%0A"
                 f"*Contacto:* {nombre_v} ({telefono_v})"
             )
             link_wa_v = f"https://wa.me/{MI_NUMERO_WA}?text={msg_prop}"
@@ -303,6 +307,7 @@ with tab_vendedor:
                 f'<a href="{link_wa_v}" target="_blank" style="display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;">📱 Enviar Notificación con Fotos a WhatsApp</a>',
                 unsafe_allow_html=True
             )
+
 
 # =========================================================
 # PESTAÑA 3: ASISTENTE DE TASACIÓN E INSPECCIÓN VISUAL POR IA
