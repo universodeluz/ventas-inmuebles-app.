@@ -250,7 +250,8 @@ with tab_vendedor:
         
         fotos_cargadas = st.file_uploader(
             "Sube fotos de la propiedad desde tu celular:", 
-            type=["jpg", "png", "jpeg"], 
+        type=["jpg", "png", "jpeg", "heic", "webp", "JPG", "PNG", "JPEG"],
+            
             accept_multiple_files=True
         )
 
