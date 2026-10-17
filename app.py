@@ -428,7 +428,7 @@ with tab_ia:
                 f"*Fotos adjuntas:* {num_fotos_t} foto(s)%0A"
                 f"*Solicitante:* {nombre_t} ({whatsapp_t})"
             )
-                        link_wa_tasacion = f"https://wa.me/{MI_NUMERO_WA}?text={msg_tasacion}"
+            link_wa_tasacion = f"https://wa.me/{MI_NUMERO_WA}?text={msg_tasacion}"
             
             estilo_boton = "display:inline-block;padding:14px 24px;font-size:16px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;"
             
