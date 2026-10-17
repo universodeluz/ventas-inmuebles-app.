@@ -105,7 +105,7 @@ with tab_comprador:
     nicho = st.selectbox(
         "1. Selecciona el Estado o Región principal:",
         ["Isla de Margarita (Nueva Esparta)", "Caracas (Distrito Capital)", "Estado Miranda", "Estado La Guaira"],
-        key="nicho_c_reactivo"
+        key="nicho_c"
     )
     
     if "Margarita" in nicho:
@@ -117,7 +117,7 @@ with tab_comprador:
     else:
         loc_opciones = LOCALIDADES_LA_GUAIRA
         
-    localidad = st.selectbox("2. Selecciona la localidad o sector específico:", loc_opciones, key="loc_c_reactivo")
+    localidad = st.selectbox("2. Selecciona la localidad o sector específico:", loc_opciones, key="loc_c")
 
     with st.form("form_comprador_detalles"):
         operacion = st.radio("Transacción:", ["Comprar", "Alquilar"])
@@ -198,7 +198,7 @@ with tab_vendedor:
     región_v = st.selectbox(
         "1. Estado o Región de la propiedad:",
         ["Isla de Margarita (Nueva Esparta)", "Caracas (Distrito Capital)", "Estado Miranda", "Estado La Guaira"],
-        key="reg_v_reactivo"
+        key="reg_v"
     )
     
     if "Margarita" in región_v:
@@ -210,7 +210,7 @@ with tab_vendedor:
     else:
         loc_v_opciones = LOCALIDADES_LA_GUAIRA
         
-    localidad_v = st.selectbox("2. Localidad o Sector específico:", loc_v_opciones, key="loc_v_reactivo")
+    localidad_v = st.selectbox("2. Localidad o Sector específico:", loc_v_opciones, key="loc_v")
 
     with st.form("form_vendedor_detalles"):
         titulo_v = st.text_input("Título o breve descripción (ej: Casa quinta en El Hatillo con amplio jardín):")
@@ -288,16 +288,29 @@ with tab_vendedor:
 with tab_ia:
     st.subheader("🤖 Asistente de Tasación e Inspección Visual por IA")
     st.markdown("""
-    El sistema evalúa de forma independiente los metros de construcción y los metros de terreno, combinándolos con la zona, amoblado y factores de valor para calcular la **banda de precios de mercado sugerida**.
+    El sistema evalúa de forma independiente los metros de construcción y terreno, adaptando el cálculo al sector exacto seleccionado (como Maneiro, Las Mercedes, El Hatillo, etc.).
     """)
     
+    # SECTORIZACIÓN REACTIVA FUERA DEL FORMULARIO PARA QUE CAMBIE AL INSTANTE
+    región_t = st.selectbox(
+        "1. Región / Estado:",
+        ["Isla de Margarita (Nueva Esparta)", "Caracas (Distrito Capital)", "Estado Miranda", "Estado La Guaira"],
+        key="reg_t"
+    )
+    
+    if "Margarita" in región_t:
+        loc_t_opciones = LOCALIDADES_MARGARITA
+    elif "Caracas" in región_t:
+        loc_t_opciones = LOCALIDADES_CARACAS
+    elif "Miranda" in región_t:
+        loc_t_opciones = LOCALIDADES_MIRANDA
+    else:
+        loc_t_opciones = LOCALIDADES_LA_GUAIRA
+        
+    localidad_t = st.selectbox("2. Localidad o Sector específico:", loc_t_opciones, key="loc_t")
+
     with st.form("form_tasacion_ia"):
-        st.markdown("### 1. Datos Técnicos, Metrajes y Factores de Valor")
-        región_t = st.selectbox(
-            "Región / Estado:",
-            ["Isla de Margarita (Nueva Esparta)", "Caracas (Distrito Capital)", "Estado Miranda", "Estado La Guaira"],
-            key="reg_t"
-        )
+        st.markdown("### Datos Técnicos, Metrajes y Factores de Valor")
         tipo_t = st.selectbox("Tipo de Inmueble:", TIPOS_INMUEBLES, key="tipo_t")
         transaccion_t = st.radio("Objetivo de Tasación:", ["Valor de Venta Comercial", "Canon de Alquiler Sugerido"])
         
@@ -322,7 +335,7 @@ with tab_ia:
         t_pozo = st.checkbox("Tiene Pozo o Agua constante", key="tpz")
         t_vista = st.checkbox("Tiene Vista privilegiada (Mar/Ávila/Montaña)", key="tv")
         
-        st.markdown("### 2. Evidencia Fotográfica")
+        st.markdown("### Evidencia Fotográfica")
         fotos_tasacion = st.file_uploader(
             "Sube fotos del inmueble (Fachada, Sala, Cocina, Baños):", 
             type=["jpg", "png", "jpeg"], 
@@ -367,14 +380,14 @@ with tab_ia:
             st.markdown("### 📊 Resultado Preliminar del Asistente IA")
             etiqueta_resultado = "Banda de Venta Sugerida" if "Venta" in transaccion_t else "Banda de Alquiler Sugerida"
             st.metric(label=etiqueta_resultado, value=f"${rango_min:,} - ${rango_max:,} USD")
-            st.info(f"💡 **Criterio IA:** Valuación calculada para {m2_construccion_t} m² de construcción y {m2_terreno_t} m² de terreno, con equipamiento '{estado_amoblado_t}'.")
+            st.info(f"💡 **Criterio IA:** Valuación en **{localidad_t}**, calculada para {m2_construccion_t} m² de construcción y {m2_terreno_t} m² de terreno.")
             
             num_fotos_t = len(fotos_tasacion) if fotos_tasacion else 0
             
             msg_tasacion = (
                 f"Hola, he realizado una Tasación por IA en la web:%0A"
                 f"*Objetivo:* {transaccion_t}%0A"
-                f"*Región:* {región_t}%0A"
+                f"*Región:* {región_t} - {localidad_t}%0A"
                 f"*Inmueble:* {tipo_t} ({m2_construccion_t} m² const. / {m2_terreno_t} m² terreno)%0A"
                 f"*Condición:* {estado_amoblado_t} | *Conservación:* {estado_conservacion}%0A"
                 f"*Plusvalías:* Piscina({t_piscina}), Planta({t_planta}), Pozo({t_pozo}), Vista({t_vista})%0A"
@@ -401,4 +414,3 @@ with col_g1:
 
 with col_g2:
     st.link_button("🏢 Grupo Caracas / La Guaira", LINK_GRUPO_CARACAS, use_container_width=True)
-
