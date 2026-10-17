@@ -46,7 +46,7 @@ with col_top2:
 
 st.markdown("---")
 
-# --- LISTAS DE LOCALIDADES AMPLIADAS Y OPTIMIZADAS ---
+# --- LISTAS DE LOCALIDADES ---
 LOCALIDADES_MARGARITA = [
     "Pampatar (Municipio Maneiro - Alta Plusvalía)",
     "Costa Azul / Playa El Ángel (Municipio Maneiro)",
@@ -199,7 +199,7 @@ with tab_comprador:
 # PESTAÑA 2: VENDEDORES / ALIADOS
 # =========================================================
 with tab_vendedor:
-    st.subheader("Publica o Registra tu Inmueble con Factores de Valor")
+    st.subheader("Publica o Registra tu Inmueble con Metrajes y Factores de Valor")
     
     región_v = st.selectbox(
         "1. Estado o Región de la propiedad:",
@@ -219,15 +219,17 @@ with tab_vendedor:
     localidad_v = st.selectbox("2. Localidad o Sector específico:", loc_v_opciones, key="loc_v_reactivo")
 
     with st.form("form_vendedor_detalles"):
-        titulo_v = st.text_input("Título o breve descripción (ej: Casa quinta en El Junquito con clima de montaña):")
+        titulo_v = st.text_input("Título o breve descripción (ej: Casa quinta en El Hatillo con amplio jardín):")
         tipo_v = st.selectbox("Tipo de Inmueble:", TIPOS_INMUEBLES, key="tipo_v")
         operacion_v = st.radio("Tipo de Transacción:", ["Venta", "Alquiler"], key="op_v")
         
         col_v1, col_v2 = st.columns(2)
         with col_v1:
-            precio_v = st.number_input("Precio ($ USD):", min_value=0, value=45000, step=1000)
-            habitaciones_v = st.number_input("Habitaciones:", min_value=0, value=2)
+            precio_v = st.number_input("Precio ($ USD):", min_value=0, value=85000, step=2500)
+            m2_construccion_v = st.number_input("Área de Construcción (m² techados):", min_value=0, value=150)
+            habitaciones_v = st.number_input("Habitaciones:", min_value=0, value=3)
         with col_v2:
+            m2_terreno_v = st.number_input("Área de Terreno / Parcela (m² totales):", min_value=0, value=500)
             estado_amoblado = st.selectbox("Condición de amoblado:", ["Amoblado y Equipado", "Semiamoblado", "Sin amoblar / Solo cocina"])
             banos_v = st.number_input("Baños:", min_value=1, value=2)
             
@@ -271,10 +273,12 @@ with tab_vendedor:
                 f"*Propiedad:* {titulo_v}%0A"
                 f"*Transacción:* {operacion_v} ({tipo_v})%0A"
                 f"*Región:* {región_v} - {localidad_v}%0A"
-                f"*Precio:* ${precio_v} | *Hab:* {habitaciones_v} | *Baños:* {banos_v}%0A"
+                f"*Precio:* ${precio_v}%0A"
+                f"*Construcción:* {m2_construccion_v} m² | *Terreno:* {m2_terreno_v} m²%0A"
+                f"*Hab:* {habitaciones_v} | *Baños:* {banos_v}%0A"
                 f"*Condición:* {estado_amoblado}%0A"
                 f"*Extras de valor:* {', '.join(amenidades_lista) if amenidades_lista else 'Ninguno'}%0A"
-                f"*Fotos cargadas en app:* {num_fotos} foto(s)%0A"
+                f"*Fotos en app:* {num_fotos} foto(s)%0A"
                 f"*Contacto:* {nombre_v} ({telefono_v})"
             )
             link_wa_v = f"https://wa.me/{MI_NUMERO_WA}?text={msg_prop}"
@@ -290,11 +294,11 @@ with tab_vendedor:
 with tab_ia:
     st.subheader("🤖 Asistente de Tasación e Inspección Visual por IA")
     st.markdown("""
-    El sistema evalúa los metros cuadrados, la zona específica, el estado de amoblado y los factores de valor críticos para calcular la **banda de precios de mercado sugerida**.
+    El sistema evalúa de forma independiente los metros de construcción y los metros de terreno, combinándolos con la zona, amoblado y factores de valor para calcular la **banda de precios de mercado sugerida**.
     """)
     
     with st.form("form_tasacion_ia"):
-        st.markdown("### 1. Datos Técnicos y Factores de Valor")
+        st.markdown("### 1. Datos Técnicos, Metrajes y Factores de Valor")
         región_t = st.selectbox(
             "Región / Estado:",
             ["Isla de Margarita (Nueva Esparta)", "Caracas (Distrito Capital)", "Estado Miranda", "Estado La Guaira"],
@@ -305,10 +309,11 @@ with tab_ia:
         
         col_t1, col_t2 = st.columns(2)
         with col_t1:
-            m2_construccion = st.number_input("Área de Construcción (m²):", min_value=10, value=80)
-            habitaciones_t = st.number_input("Habitaciones:", min_value=0, value=2)
+            m2_construccion_t = st.number_input("Área de Construcción (m² techados):", min_value=10, value=120)
+            habitaciones_t = st.number_input("Habitaciones:", min_value=0, value=3)
             estado_amoblado_t = st.selectbox("Nivel de Equipamiento:", ["Amoblado y Equipado", "Semiamoblado", "Sin amoblar"])
         with col_t2:
+            m2_terreno_t = st.number_input("Área de Terreno / Parcela (m² totales):", min_value=0, value=350)
             banos_t = st.number_input("Baños:", min_value=1, value=2)
             antiguedad_t = st.selectbox("Antigüedad:", ["A estrenar / Nuevo", "Menos de 10 años", "Más de 10 años / A actualizar"])
             
@@ -341,11 +346,13 @@ with tab_ia:
         if not whatsapp_t:
             st.error("Por favor ingresa tu número de WhatsApp para enviarte el reporte detallado.")
         else:
-            # Lógica inteligente ponderada por factores de valor
-            base_m2 = 700 if "Margarita" in región_t or "Caracas" in región_t else 400
+            # Lógica inteligente ponderando construcción y valor adicional por m2 de terreno
+            base_m2_const = 750 if "Margarita" in región_t or "Caracas" in región_t else 450
+            base_m2_terr = 60 if "Margarita" in región_t or "Caracas" in región_t else 30
             
             if "Alquiler" in transaccion_t:
-                base_m2 = base_m2 * 0.0075 
+                base_m2_const = base_m2_const * 0.0075 
+                base_m2_terr = base_m2_terr * 0.005
             
             multiplicador = 1.0
             if "Amoblado" in estado_amoblado_t: multiplicador += 0.15
@@ -355,7 +362,11 @@ with tab_ia:
             if t_pozo: multiplicador += 0.12
             if t_vista: multiplicador += 0.15
             
-            precio_estimado = m2_construccion * base_m2 * multiplicador
+            # Cálculo combinando construcción y terreno
+            valor_construccion = m2_construccion_t * base_m2_const
+            valor_terreno = m2_terreno_t * base_m2_terr
+            
+            precio_estimado = (valor_construccion + valor_terreno) * multiplicador
             rango_min = int(precio_estimado * 0.9)
             rango_max = int(precio_estimado * 1.1)
             
@@ -364,7 +375,7 @@ with tab_ia:
             st.markdown("### 📊 Resultado Preliminar del Asistente IA")
             etiqueta_resultado = "Banda de Venta Sugerida" if "Venta" in transaccion_t else "Banda de Alquiler Sugerida"
             st.metric(label=etiqueta_resultado, value=f"${rango_min:,} - ${rango_max:,} USD")
-            st.info(f"💡 **Criterio IA:** Ponderado por {m2_construccion} m², equipamiento '{estado_amoblado_t}' y plusvalía por servicios.")
+            st.info(f"💡 **Criterio IA:** Valuación calculada para {m2_construccion_t} m² de construcción y {m2_terreno_t} m² de terreno, con equipamiento '{estado_amoblado_t}'.")
             
             num_fotos_t = len(fotos_tasacion) if fotos_tasacion else 0
             
@@ -372,7 +383,8 @@ with tab_ia:
                 f"Hola, he realizado una Tasación por IA en la web:%0A"
                 f"*Objetivo:* {transaccion_t}%0A"
                 f"*Región:* {región_t}%0A"
-                f"*Inmueble:* {tipo_t} ({m2_construccion} m², {estado_amoblado_t})%0A"
+                f"*Inmueble:* {tipo_t} ({m2_construccion_t} m² const. / {m2_terreno_t} m² terreno)%0A"
+                f"*Condición:* {estado_amoblado_t} | *Conservación:* {estado_conservacion}%0A"
                 f"*Plusvalías:* Piscina({t_piscina}), Planta({t_planta}), Pozo({t_pozo}), Vista({t_vista})%0A"
                 f"*Banda calculada:* ${rango_min:,} - ${rango_max:,} USD%0A"
                 f"*Fotos adjuntas:* {num_fotos_t} foto(s)%0A"
@@ -402,6 +414,4 @@ with col_g1:
 with col_g2:
     st.markdown("##### 🏢 Gran Caracas / La Guaira")
     st.markdown(
-        f'<a href="{LINK_GRUPO_CARACAS}" target="_blank" style="display:inline-block;padding:10px 14px;font-size:14px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:6px;">Unirme al Grupo Caracas</a>',
-        unsafe_allow_html=True
-    )
+        f'<a href="{LINK_GRUPO_CARACAS}" target="_blank" style="display:inline-block;padding:10px 14px;font-size:14px;font-weight
