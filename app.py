@@ -32,8 +32,8 @@ SHEET_URL = "https://docs.google.com/spreadsheets/d/1AkLUKg1FgjgEPeJmSY9oE-1v2Sg
 # --- CONFIGURACIÓN DE CONTACTOS Y GRUPOS ---
 MI_NUMERO_WA = "584124792652" 
 
-LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/TU_ENLACE_MARGARITA_AQUI"
-LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/TU_ENLACE_CARACAS_AQUI"
+LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
+LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
 
 @st.cache_data(ttl=300)
 def cargar_inventario(url):
@@ -428,8 +428,13 @@ with tab_ia:
                 f"*Fotos adjuntas:* {num_fotos_t} foto(s)%0A"
                 f"*Solicitante:* {nombre_t} ({whatsapp_t})"
             )
-            link_wa_tasacion = f"https://wa.me/{MI_NUMERO_WA}?text={msg_tasacion}"
+                        link_wa_tasacion = f"https://wa.me/{MI_NUMERO_WA}?text={msg_tasacion}"
+            
+            estilo_boton = "display:inline-block;padding:14px 24px;font-size:16px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;"
             
             st.markdown(
-                f'<a href="{link_wa_tasacion}" target="_blank" style="display:inline-block;padding:14px 24px;font-size:16px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decorat
+                f'<a href="{link_wa_tasacion}" target="_blank" style="{estilo_boton}">📱 Enviar Reporte Completo de Tasación a WhatsApp</a>',
+                unsafe_allow_html=True
+            )
+            
             
