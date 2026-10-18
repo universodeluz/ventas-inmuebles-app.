@@ -4,6 +4,14 @@ import cloudinary
 import cloudinary.uploader
 from PIL import Image
 import io
+from streamlit_gsheets import GSheetsConnection
+
+# Intento de importar soporte para formatos de iPhone/Android (HEIC)
+try:
+    from pillow_heif import register_heif_opener
+    register_heif_opener()
+except ImportError:
+    pass
 
 # Configuración de la página
 st.set_page_config(
@@ -29,18 +37,23 @@ except Exception:
 # --- CONEXIÓN A GOOGLE SHEETS ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1AkLUKg1FgjgEPeJmSY9oE-1v2Sgld8-4wsu8og3XMEU/export?format=csv"
 
+try:
+    conn = st.connection("gsheets", type=GSheetsConnection)
+except Exception:
+    conn = None
+
 # --- CONFIGURACIÓN DE CONTACTOS Y GRUPOS ---
 MI_NUMERO_WA = "584124792652" 
 
 LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
 LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=60)
 def cargar_inventario(url):
     try:
         df = pd.read_csv(url)
         return df
-    except Exception as e:
+    except Exception:
         return None
 
 df_inmuebles = cargar_inventario(SHEET_URL)
@@ -104,11 +117,12 @@ TIPOS_INMUEBLES = [
     "Apartamento", "Casa", "Townhouse", "Posada / Hotel", "Local Comercial", "Terreno", "Oficina"
 ]
 
-# CREACIÓN DE PESTAÑAS (TABS)
-tab_comprador, tab_vendedor, tab_ia = st.tabs([
+# CREACIÓN DE PESTAÑAS
+tab_comprador, tab_vendedor, tab_inventario, tab_ia = st.tabs([
     "🔍 Buscar Inmueble", 
-    "📝 Publicar Inmueble", 
-    "🤖 Tasación e Inspección IA"
+    "📝 Publicar Inmueble",
+    "📂 Inventario Google Sheets",
+    "🤖 Tasación IA"
 ])
 
 # =========================================================
@@ -142,12 +156,12 @@ with tab_comprador:
         with col_c1:
             amoblado_filtro = st.selectbox("Condición:", ["Indiferente", "Amoblado y Equipado", "Sin amoblar"])
         with col_c2:
-            presupuesto_max = st.number_input("Presupuesto máximo ($):", min_value=0, value=50000, step=2500)
+            presupuesto_max = st.number_input("Presupuesto máximo ($ USD):", min_value=0, value=50000, step=2500)
             
-        st.markdown("**Amenidades deseadas:**")
+        st.markdown("**Servicios y Amenidades deseadas:**")
         req_piscina = st.checkbox("Debe tener Piscina")
         req_planta = st.checkbox("Debe tener Planta Eléctrica")
-        req_pozo = st.checkbox("Debe tener Pozo / Agua constante")
+        req_pozo = st.checkbox("Debe tener Pozo / Tanque constante")
         
         st.markdown("---")
         st.markdown("**Datos de Contacto**")
@@ -172,7 +186,7 @@ with tab_comprador:
                     st.success("✨ ¡Encontramos propiedades coincidentes!")
                     for idx, row in filtrados.iterrows():
                         st.markdown(f"**🏠 {row['titulo']}**")
-                        st.markdown(f"💰 **Precio:** ${row['precio']} | 📍 **Zona:** {row['nicho']}")
+                        st.markdown(f"💰 **Precio:** ${row['precio']} USD | 📍 **Zona:** {row['nicho']}")
                         if 'enlace_foto_o_info' in row and pd.notna(row['enlace_foto_o_info']) and str(row['enlace_foto_o_info']).strip() != "":
                             st.markdown(f"[📷 Ver Galería / Ficha Técnica]({row['enlace_foto_o_info']})")
                         st.markdown("---")
@@ -185,7 +199,7 @@ with tab_comprador:
             extras_busqueda = []
             if req_piscina: extras_busqueda.append("Piscina")
             if req_planta: extras_busqueda.append("Planta")
-            if req_pozo: extras_busqueda.append("Pozo")
+            if req_pozo: extras_busqueda.append("Pozo/Tanque")
 
             msg_wa = (
                 f"Hola, nuevo requerimiento de comprador:%0A"
@@ -193,19 +207,20 @@ with tab_comprador:
                 f"*Transacción:* {operacion} ({tipo_inmueble})%0A"
                 f"*Región:* {nicho} - {localidad}%0A"
                 f"*Condición:* {amoblado_filtro}%0A"
-                f"*Presupuesto Máx:* ${presupuesto_max}%0A"
+                f"*Presupuesto Máx:* ${presupuesto_max} USD%0A"
                 f"*Extras exigidos:* {', '.join(extras_busqueda) if extras_busqueda else 'Ninguno'}%0A"
                 f"*Opciones vistas en web:* {', '.join(inmuebles_compatibles) if inmuebles_compatibles else 'Ninguna inmediata'}"
             )
             link_wa = f"https://wa.me/{MI_NUMERO_WA}?text={msg_wa}"
             
+            estilo_btn = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;"
             st.markdown(
-                f'<a href="{link_wa}" target="_blank" style="display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;">📱 Enviar Requerimiento a WhatsApp</a>',
+                f'<a href="{link_wa}" target="_blank" style="{estilo_btn}">📱 Enviar Requerimiento a WhatsApp</a>',
                 unsafe_allow_html=True
             )
 
 # =========================================================
-# PESTAÑA 2: VENDEDORES / ALIADOS (CON OPTIMIZACIÓN DE FOTOS)
+# PESTAÑA 2: VENDEDORES / ALIADOS (FORMULARIO PROFESIONAL)
 # =========================================================
 with tab_vendedor:
     st.subheader("Publica o Registra tu Inmueble")
@@ -228,38 +243,47 @@ with tab_vendedor:
     localidad_v = st.selectbox("2. Localidad o Sector específico:", loc_v_opciones, key="loc_v")
 
     with st.form("form_vendedor_detalles"):
-        titulo_v = st.text_input("Título o breve descripción (ej: Casa quinta en El Hatillo con amplio jardín):")
+        titulo_v = st.text_input("Título comercial (ej: Espectacular Penthouse en Costa Azul con vista al mar):")
         tipo_v = st.selectbox("Tipo de Inmueble:", TIPOS_INMUEBLES, key="tipo_v")
         operacion_v = st.radio("Tipo de Transacción:", ["Venta", "Alquiler"], key="op_v")
         
         col_v1, col_v2 = st.columns(2)
         with col_v1:
-            precio_v = st.number_input("Precio ($ USD):", min_value=0, value=85000, step=2500)
+            precio_v = st.number_input("Precio de Oferta ($ USD):", min_value=0, value=85000, step=2500)
             m2_construccion_v = st.number_input("Área de Construcción (m² techados):", min_value=0, value=150)
             habitaciones_v = st.number_input("Habitaciones:", min_value=0, value=3)
         with col_v2:
             m2_terreno_v = st.number_input("Área de Terreno / Parcela (m² totales):", min_value=0, value=500)
-            estado_amoblado = st.selectbox("Condición de amoblado:", ["Amoblado y Equipado", "Semiamoblado", "Sin amoblar / Solo cocina"])
+            estado_amoblado = st.selectbox("Condición de amoblado:", ["Amoblado y Equipado de Lujo", "Semiamoblado", "Sin amoblar / Solo cocina"])
             banos_v = st.number_input("Baños:", min_value=1, value=2)
             
-        st.markdown("**Aspectos de Valor y Amenidades:**")
-        tiene_piscina = st.checkbox("Piscina")
-        tiene_planta = st.checkbox("Planta eléctrica (total o áreas comunes)")
-        tiene_pozo = st.checkbox("Pozo de agua / Tanque de gran capacidad")
-        tiene_vista = st.checkbox("Vista destacada (Mar / Ávila / Montaña)")
+        st.markdown("### ⚡ Servicios de Resistencia y Conectividad")
+        col_s1, col_s2 = st.columns(2)
+        with col_s1:
+            tiene_piscina = st.checkbox("Piscina operativa")
+            tiene_planta = st.checkbox("Planta eléctrica (Total o Parcial)")
+            tiene_pozo = st.checkbox("Pozo de agua / Tanque grande")
+        with col_s2:
+            tiene_vista = st.checkbox("Vista privilegiada (Mar / Ávila)")
+            tiene_internet = st.checkbox("Internet de alta velocidad (Fibra/ABA)")
+            
+        st.markdown("### 📁 Estatus Legal")
+        estatus_legal = st.selectbox(
+            "Documentación:",
+            ["Documentos al día listos para firmar", "Ficha catastral y solvencia en trámite", "Sucesión / Hipoteca pendiente por liberar"]
+        )
         
         fotos_cargadas = st.file_uploader(
-            "Sube fotos de la propiedad desde tu celular:", 
-        type=["jpg", "png", "jpeg", "heic", "webp", "JPG", "PNG", "JPEG"],
-            
+            "Sube fotos de la propiedad desde tu celular (puedes seleccionar varias):", 
+            type=["jpg", "png", "jpeg", "heic", "webp", "JPG", "PNG", "JPEG"], 
             accept_multiple_files=True
         )
 
         st.markdown("---")
-        nombre_v = st.text_input("Nombre del Propietario / Agente:", key="nombre_v")
-        telefono_v = st.text_input("WhatsApp de Contacto:", key="tel_v")
+        nombre_v = st.text_input("Nombre del Propietario / Asesor Inmobiliario:", key="nombre_v")
+        telefono_v = st.text_input("WhatsApp de Contacto (ej: 0412...):", key="tel_v")
         
-        btn_vendedor = st.form_submit_button("📤 Registrar Inmueble y Subir Fotos a la Nube")
+        btn_vendedor = st.form_submit_button("📤 Procesar Inmueble y Subir Fotos a la Nube")
         
     if btn_vendedor:
         if not titulo_v or not telefono_v:
@@ -283,14 +307,15 @@ with tab_vendedor:
                             urls_fotos.append(res.get("secure_url"))
                         except Exception as e:
                             st.warning(f"No se pudo procesar una imagen: {e}")
-                            
+
             st.success("¡Propiedad procesada con éxito!")
             
-            amenidades_lista = []
-            if tiene_piscina: amenidades_lista.append("Piscina")
-            if tiene_planta: amenidades_lista.append("Planta")
-            if tiene_pozo: amenidades_lista.append("Pozo")
-            if tiene_vista: amenidades_lista.append("Vista")
+            servicios_lista = []
+            if tiene_piscina: servicios_lista.append("Piscina")
+            if tiene_planta: servicios_lista.append("Planta")
+            if tiene_pozo: servicios_lista.append("Pozo/Tanque")
+            if tiene_vista: servicios_lista.append("Vista")
+            if tiene_internet: servicios_lista.append("Internet")
 
             if urls_fotos:
                 enlaces_fotos_str = "%0A".join([f"📷 Foto {i}: {url}" for i, url in enumerate(urls_fotos, start=1)])
@@ -298,27 +323,42 @@ with tab_vendedor:
                 enlaces_fotos_str = "Sin fotos subidas"
 
             msg_prop = (
-                f"Hola, deseo publicar un inmueble:%0A"
+                f"Hola, nuevo inmueble registrado:%0A"
                 f"*Propiedad:* {titulo_v}%0A"
                 f"*Transacción:* {operacion_v} ({tipo_v})%0A"
                 f"*Región:* {región_v} - {localidad_v}%0A"
-                f"*Precio:* ${precio_v}%0A"
+                f"*Precio:* ${precio_v} USD%0A"
                 f"*Construcción:* {m2_construccion_v} m² | *Terreno:* {m2_terreno_v} m²%0A"
                 f"*Hab:* {habitaciones_v} | *Baños:* {banos_v}%0A"
                 f"*Condición:* {estado_amoblado}%0A"
-                f"*Extras de valor:* {', '.join(amenidades_lista) if amenidades_lista else 'Ninguno'}%0A"
+                f"*Servicios/Extras:* {', '.join(servicios_lista) if servicios_lista else 'Ninguno'}%0A"
+                f"*Legal:* {estatus_legal}%0A"
                 f"*Fotos en la Nube ({len(urls_fotos)}):*%0A{enlaces_fotos_str}%0A"
                 f"*Contacto:* {nombre_v} ({telefono_v})"
             )
             link_wa_v = f"https://wa.me/{MI_NUMERO_WA}?text={msg_prop}"
             
+            estilo_btn_v = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;"
             st.markdown(
-                f'<a href="{link_wa_v}" target="_blank" style="display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;">📱 Enviar Notificación con Fotos a WhatsApp</a>',
+                f'<a href="{link_wa_v}" target="_blank" style="{estilo_btn_v}">📱 Enviar Notificación con Fotos a WhatsApp</a>',
                 unsafe_allow_html=True
             )
 
 # =========================================================
-# PESTAÑA 3: ASISTENTE DE TASACIÓN E INSPECCIÓN VISUAL POR IA
+# PESTAÑA 3: INVENTARIO GOOGLE SHEETS
+# =========================================================
+with tab_inventario:
+    st.subheader("📂 Inventario General Conectado a Google Sheets")
+    st.markdown("Visualización en tiempo real de los inmuebles cargados en la base de datos.")
+    
+    if df_inmuebles is not None and not df_inmuebles.empty:
+        st.dataframe(df_inmuebles, use_container_width=True)
+        st.caption(f"Total de registros activos: {len(df_inmuebles)}")
+    else:
+        st.info("No se han cargado datos o la hoja de Google Sheets está vacía por los momentos.")
+
+# =========================================================
+# PESTAÑA 4: ASISTENTE DE TASACIÓN E INSPECCIÓN VISUAL POR IA
 # =========================================================
 with tab_ia:
     st.subheader("🤖 Asistente de Tasación e Inspección Visual por IA")
@@ -366,13 +406,13 @@ with tab_ia:
         st.markdown("**Factores Críticos de Plusvalía:**")
         t_piscina = st.checkbox("Tiene Piscina", key="tp")
         t_planta = st.checkbox("Tiene Planta Eléctrica", key="tpl")
-        t_pozo = st.checkbox("Tiene Pozo o Agua constante", key="tpz")
+        t_pozo = st.checkbox("Tiene Pozo o Tanque constante", key="tpz")
         t_vista = st.checkbox("Tiene Vista privilegiada (Mar/Ávila/Montaña)", key="tv")
         
-        st.markdown("### Evidencia Fotográfica")
+        st.markdown("### Evidencia Fotográfica para Inspección")
         fotos_tasacion = st.file_uploader(
             "Sube fotos del inmueble (Fachada, Sala, Cocina, Baños):", 
-            type=["jpg", "png", "jpeg"], 
+            type=["jpg", "png", "jpeg", "heic", "webp", "JPG", "PNG", "JPEG"], 
             accept_multiple_files=True,
             key="tasacion_files"
         )
@@ -431,11 +471,21 @@ with tab_ia:
             )
             link_wa_tasacion = f"https://wa.me/{MI_NUMERO_WA}?text={msg_tasacion}"
             
-            estilo_boton = "display:inline-block;padding:14px 24px;font-size:16px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;"
-            
+            estilo_btn_t = "display:inline-block;padding:14px 24px;font-size:16px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;"
             st.markdown(
-                f'<a href="{link_wa_tasacion}" target="_blank" style="{estilo_boton}">📱 Enviar Reporte Completo de Tasación a WhatsApp</a>',
+                f'<a href="{link_wa_tasacion}" target="_blank" style="{estilo_btn_t}">📱 Enviar Reporte Completo de Tasación a WhatsApp</a>',
                 unsafe_allow_html=True
             )
-            
-            
+
+# =========================================================
+# SECCIÓN FINAL: GRUPOS DE WHATSAPP
+# =========================================================
+st.markdown("---")
+st.subheader("💬 Únete a nuestras comunidades en WhatsApp")
+col_g1, col_g2 = st.columns(2)
+
+with col_g1:
+    st.link_button("🌴 Grupo Margarita", LINK_GRUPO_MARGARITA, use_container_width=True)
+
+with col_g2:
+    st.link_button("🏢 Grupo Caracas / La Guaira", LINK_GRUPO_CARACAS, use_container_width=True)
