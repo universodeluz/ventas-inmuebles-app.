@@ -35,7 +35,8 @@ except Exception:
     CLOUDINARY_ACTIVO = False
 
 # --- CONEXIÓN A GOOGLE SHEETS ---
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1AkLUKg1FgjgEPeJmSY9oE-1v2Sgld8-4wsu8og3XMEU/export?format=csv"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1AkLUKg1FgjgEPeJmSY9oE-1v2Sgld8-4wsu8og3XMEU/edit?usp=sharing"
+SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1AkLUKg1FgjgEPeJmSY9oE-1v2Sgld8-4wsu8og3XMEU/export?format=csv"
 
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
@@ -48,7 +49,7 @@ MI_NUMERO_WA = "584124792652"
 LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
 LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=10)
 def cargar_inventario(url):
     try:
         df = pd.read_csv(url)
@@ -56,7 +57,7 @@ def cargar_inventario(url):
     except Exception:
         return None
 
-df_inmuebles = cargar_inventario(SHEET_URL)
+df_inmuebles = cargar_inventario(SHEET_CSV_URL)
 
 # --- BANNER SUPERIOR DE GRUPOS DE WHATSAPP ---
 st.info("💬 **¿Quieres unirte a nuestras comunidades activas en WhatsApp?**")
@@ -220,7 +221,7 @@ with tab_comprador:
             )
 
 # =========================================================
-# PESTAÑA 2: VENDEDORES / ALIADOS (CON ESCRITURA EN GOOGLE SHEETS)
+# PESTAÑA 2: VENDEDORES / ALIADOS (CON ESCRITURA CORREGIDA)
 # =========================================================
 with tab_vendedor:
     st.subheader("Publica o Registra tu Inmueble")
@@ -308,10 +309,10 @@ with tab_vendedor:
                         except Exception as e:
                             st.warning(f"No se pudo procesar una imagen: {e}")
 
-            # GUARDAR AUTOMÁTICAMENTE EN GOOGLE SHEETS
+            # ESCRITURA EN GOOGLE SHEETS (CON URL ESPECIFICADA)
             if conn is not None:
                 try:
-                    df_actual = conn.read(worksheet="Sheet1")
+                    df_actual = conn.read(spreadsheet=SHEET_URL)
                     nueva_fila = pd.DataFrame([{
                         "titulo": titulo_v,
                         "nicho": región_v,
@@ -321,8 +322,9 @@ with tab_vendedor:
                         "enlace_foto_o_info": urls_fotos[0] if urls_fotos else ""
                     }])
                     df_actualizado = pd.concat([df_actual, nueva_fila], ignore_index=True)
-                    conn.update(worksheet="Sheet1", data=df_actualizado)
+                    conn.update(spreadsheet=SHEET_URL, data=df_actualizado)
                     st.success("✅ ¡Inmueble guardado en Google Sheets con éxito!")
+                    st.cache_data.clear() # Limpia la memoria caché para reflejar el cambio inmediato
                 except Exception as e:
                     st.warning(f"Aviso al escribir en la base de datos: {e}")
 
