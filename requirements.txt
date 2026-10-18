@@ -3,6 +3,8 @@ pandas
 cloudinary
 pillow
 pillow-heif
+st-gsheets-connection
+
 
 
 
