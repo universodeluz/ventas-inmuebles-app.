@@ -221,7 +221,7 @@ with tab_comprador:
             )
 
 # =========================================================
-# PESTAÑA 2: VENDEDORES / ALIADOS (CON REGISTRO EN GOOGLE SHEETS)
+# PESTAÑA 2: VENDEDORES / ALIADOS
 # =========================================================
 with tab_vendedor:
     st.subheader("Publica o Registra tu Inmueble")
@@ -309,7 +309,6 @@ with tab_vendedor:
                         except Exception as e:
                             st.warning(f"No se pudo procesar una imagen: {e}")
 
-            # INTENTO DE GUARDAR EN GOOGLE SHEETS
             if conn is not None:
                 try:
                     df_actual = conn.read(spreadsheet=SHEET_URL, worksheet="Sheet1")
@@ -326,8 +325,7 @@ with tab_vendedor:
                     st.success("✅ ¡Inmueble sincronizado con Google Sheets correctamente!")
                     st.cache_data.clear()
                 except Exception as ex:
-                    # Si Google Sheets está en modo solo lectura público, mostramos aviso amigable pero dejamos operativo el WhatsApp
-                    st.info("💡 Ficha procesada para WhatsApp y Cloudinary. (Para escritura automática en Sheets asegúrate de configurar permisos de edición o cuenta de servicio).")
+                    st.info("💡 Ficha procesada para WhatsApp y Cloudinary.")
 
             st.success("¡Propiedad procesada y fotos subidas a la nube con éxito!")
             
@@ -436,4 +434,13 @@ with tab_ia:
         fotos_tasacion = st.file_uploader(
             "Sube fotos del inmueble (Fachada, Sala, Cocina, Baños):", 
             type=["jpg", "png", "jpeg", "heic", "webp", "JPG", "PNG", "JPEG"], 
+            accept_multiple_files=True,
+            key="tasacion_files"
+        )
+        
+        st.markdown("---")
+        nombre_t = st.text_input("Tu Nombre / Contacto:", key="nombre_t")
+        whatsapp_t = st.text_input("Tu Número de WhatsApp:", key="wa_t")
+        
+        btn_ejecutar_tasacion = st.form_submit_but
      
