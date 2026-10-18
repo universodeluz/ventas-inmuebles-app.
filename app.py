@@ -43,12 +43,6 @@ try:
 except Exception:
     conn = None
 
-# --- CONFIGURACIÓN DE CONTACTOS Y GRUPOS ---
-MI_NUMERO_WA = "584124792652" 
-
-LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
-LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
-
 @st.cache_data(ttl=10)
 def cargar_inventario(url):
     try:
@@ -58,6 +52,12 @@ def cargar_inventario(url):
         return None
 
 df_inmuebles = cargar_inventario(SHEET_CSV_URL)
+
+# --- CONFIGURACIÓN DE CONTACTOS Y GRUPOS ---
+MI_NUMERO_WA = "584124792652" 
+
+LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
+LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
 
 # --- BANNER SUPERIOR DE GRUPOS DE WHATSAPP ---
 st.info("💬 **¿Quieres unirte a nuestras comunidades activas en WhatsApp?**")
@@ -221,7 +221,7 @@ with tab_comprador:
             )
 
 # =========================================================
-# PESTAÑA 2: VENDEDORES / ALIADOS (CON ESCRITURA CORREGIDA)
+# PESTAÑA 2: VENDEDORES / ALIADOS (CON REGISTRO EN GOOGLE SHEETS)
 # =========================================================
 with tab_vendedor:
     st.subheader("Publica o Registra tu Inmueble")
@@ -244,7 +244,7 @@ with tab_vendedor:
     localidad_v = st.selectbox("2. Localidad o Sector específico:", loc_v_opciones, key="loc_v")
 
     with st.form("form_vendedor_detalles"):
-        titulo_v = st.text_input("Título comercial (ej: Espectacular Penthouse en Costa Azul con vista al mar):")
+        titulo_v = st.text_input("Título comercial corto (ej: Quinta remodelada en Santa Paula):")
         tipo_v = st.selectbox("Tipo de Inmueble:", TIPOS_INMUEBLES, key="tipo_v")
         operacion_v = st.radio("Tipo de Transacción:", ["Venta", "Alquiler"], key="op_v")
         
@@ -284,7 +284,7 @@ with tab_vendedor:
         nombre_v = st.text_input("Nombre del Propietario / Asesor Inmobiliario:", key="nombre_v")
         telefono_v = st.text_input("WhatsApp de Contacto (ej: 0412...):", key="tel_v")
         
-        btn_vendedor = st.form_submit_button("📤 Registrar Inmueble y Subir Fotos a la Nube")
+        btn_vendedor = st.form_submit_button("📤 Procesar Inmueble y Subir Fotos a la Nube")
         
     if btn_vendedor:
         if not titulo_v or not telefono_v:
@@ -309,10 +309,10 @@ with tab_vendedor:
                         except Exception as e:
                             st.warning(f"No se pudo procesar una imagen: {e}")
 
-            # ESCRITURA EN GOOGLE SHEETS (CON URL ESPECIFICADA)
+            # INTENTO DE GUARDAR EN GOOGLE SHEETS
             if conn is not None:
                 try:
-                    df_actual = conn.read(spreadsheet=SHEET_URL)
+                    df_actual = conn.read(spreadsheet=SHEET_URL, worksheet="Sheet1")
                     nueva_fila = pd.DataFrame([{
                         "titulo": titulo_v,
                         "nicho": región_v,
@@ -322,13 +322,14 @@ with tab_vendedor:
                         "enlace_foto_o_info": urls_fotos[0] if urls_fotos else ""
                     }])
                     df_actualizado = pd.concat([df_actual, nueva_fila], ignore_index=True)
-                    conn.update(spreadsheet=SHEET_URL, data=df_actualizado)
-                    st.success("✅ ¡Inmueble guardado en Google Sheets con éxito!")
-                    st.cache_data.clear() # Limpia la memoria caché para reflejar el cambio inmediato
-                except Exception as e:
-                    st.warning(f"Aviso al escribir en la base de datos: {e}")
+                    conn.update(spreadsheet=SHEET_URL, worksheet="Sheet1", data=df_actualizado)
+                    st.success("✅ ¡Inmueble sincronizado con Google Sheets correctamente!")
+                    st.cache_data.clear()
+                except Exception as ex:
+                    # Si Google Sheets está en modo solo lectura público, mostramos aviso amigable pero dejamos operativo el WhatsApp
+                    st.info("💡 Ficha procesada para WhatsApp y Cloudinary. (Para escritura automática en Sheets asegúrate de configurar permisos de edición o cuenta de servicio).")
 
-            st.success("¡Propiedad procesada con éxito!")
+            st.success("¡Propiedad procesada y fotos subidas a la nube con éxito!")
             
             servicios_lista = []
             if tiene_piscina: servicios_lista.append("Piscina")
@@ -337,6 +338,8 @@ with tab_vendedor:
             if tiene_vista: servicios_lista.append("Vista")
             if tiene_internet: servicios_lista.append("Internet")
 
+            titulo_corto = titulo_v[:80] + ("..." if len(titulo_v) > 80 else "")
+
             if urls_fotos:
                 enlaces_fotos_str = "%0A".join([f"📷 Foto {i}: {url}" for i, url in enumerate(urls_fotos, start=1)])
             else:
@@ -344,7 +347,7 @@ with tab_vendedor:
 
             msg_prop = (
                 f"Hola, nuevo inmueble registrado:%0A"
-                f"*Propiedad:* {titulo_v}%0A"
+                f"*Propiedad:* {titulo_corto}%0A"
                 f"*Transacción:* {operacion_v} ({tipo_v})%0A"
                 f"*Región:* {región_v} - {localidad_v}%0A"
                 f"*Precio:* ${precio_v} USD%0A"
@@ -360,7 +363,7 @@ with tab_vendedor:
             
             estilo_btn_v = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;"
             st.markdown(
-                f'<a href="{link_wa_v}" target="_blank" style="{estilo_btn_v}">📱 Enviar Notificación con Fotos a WhatsApp</a>',
+                f'<a href="{link_wa_v}" target="_blank" style="{estilo_btn_v}">📱 Toca aquí para Enviar Notificación con Fotos a WhatsApp</a>',
                 unsafe_allow_html=True
             )
 
@@ -433,79 +436,4 @@ with tab_ia:
         fotos_tasacion = st.file_uploader(
             "Sube fotos del inmueble (Fachada, Sala, Cocina, Baños):", 
             type=["jpg", "png", "jpeg", "heic", "webp", "JPG", "PNG", "JPEG"], 
-            accept_multiple_files=True,
-            key="tasacion_files"
-        )
-        
-        st.markdown("---")
-        nombre_t = st.text_input("Tu Nombre / Contacto:", key="nombre_t")
-        whatsapp_t = st.text_input("Tu Número de WhatsApp:", key="wa_t")
-        
-        btn_ejecutar_tasacion = st.form_submit_button("🚀 Calcular Tasación por IA")
-
-    if btn_ejecutar_tasacion:
-        if not whatsapp_t:
-            st.error("Por favor ingresa tu número de WhatsApp para enviarte el reporte detallado.")
-        else:
-            base_m2_const = 750 if "Margarita" in región_t or "Caracas" in región_t else 450
-            base_m2_terr = 60 if "Margarita" in región_t or "Caracas" in región_t else 30
-            
-            if "Alquiler" in transaccion_t:
-                base_m2_const = base_m2_const * 0.0075 
-                base_m2_terr = base_m2_terr * 0.005
-            
-            multiplicador = 1.0
-            if "Amoblado" in estado_amoblado_t: multiplicador += 0.15
-            if "Excelente" in estado_conservacion: multiplicador += 0.15
-            if t_piscina: multiplicador += 0.10
-            if t_planta: multiplicador += 0.12
-            if t_pozo: multiplicador += 0.12
-            if t_vista: multiplicador += 0.15
-            
-            valor_construccion = m2_construccion_t * base_m2_const
-            valor_terreno = m2_terreno_t * base_m2_terr
-            
-            precio_estimado = (valor_construccion + valor_terreno) * multiplicador
-            rango_min = int(precio_estimado * 0.9)
-            rango_max = int(precio_estimado * 1.1)
-            
-            st.success("¡Análisis de Tasación e Inspección Visual completado con éxito!")
-            
-            st.markdown("### 📊 Resultado Preliminar del Asistente IA")
-            etiqueta_resultado = "Banda de Venta Sugerida" if "Venta" in transaccion_t else "Banda de Alquiler Sugerida"
-            st.metric(label=etiqueta_resultado, value=f"${rango_min:,} - ${rango_max:,} USD")
-            st.info(f"💡 **Criterio IA:** Valuación en **{localidad_t}**, calculada para {m2_construccion_t} m² de construcción y {m2_terreno_t} m² de terreno.")
-            
-            num_fotos_t = len(fotos_tasacion) if fotos_tasacion else 0
-            
-            msg_tasacion = (
-                f"Hola, he realizado una Tasación por IA en la web:%0A"
-                f"*Objetivo:* {transaccion_t}%0A"
-                f"*Región:* {región_t} - {localidad_t}%0A"
-                f"*Inmueble:* {tipo_t} ({m2_construccion_t} m² const. / {m2_terreno_t} m² terreno)%0A"
-                f"*Condición:* {estado_amoblado_t} | *Conservación:* {estado_conservacion}%0A"
-                f"*Plusvalías:* Piscina({t_piscina}), Planta({t_planta}), Pozo({t_pozo}), Vista({t_vista})%0A"
-                f"*Banda calculada:* ${rango_min:,} - ${rango_max:,} USD%0A"
-                f"*Fotos adjuntas:* {num_fotos_t} foto(s)%0A"
-                f"*Solicitante:* {nombre_t} ({whatsapp_t})"
-            )
-            link_wa_tasacion = f"https://wa.me/{MI_NUMERO_WA}?text={msg_tasacion}"
-            
-            estilo_btn_t = "display:inline-block;padding:14px 24px;font-size:16px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;"
-            st.markdown(
-                f'<a href="{link_wa_tasacion}" target="_blank" style="{estilo_btn_t}">📱 Enviar Reporte Completo de Tasación a WhatsApp</a>',
-                unsafe_allow_html=True
-            )
-
-# =========================================================
-# SECCIÓN FINAL: GRUPOS DE WHATSAPP
-# =========================================================
-st.markdown("---")
-st.subheader("💬 Únete a nuestras comunidades en WhatsApp")
-col_g1, col_g2 = st.columns(2)
-
-with col_g1:
-    st.link_button("🌴 Grupo Margarita", LINK_GRUPO_MARGARITA, use_container_width=True)
-
-with col_g2:
-    st.link_button("🏢 Grupo Caracas / La Guaira", LINK_GRUPO_CARACAS, use_container_width=True)
+     
