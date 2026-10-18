@@ -220,7 +220,7 @@ with tab_comprador:
             )
 
 # =========================================================
-# PESTAÑA 2: VENDEDORES / ALIADOS (FORMULARIO PROFESIONAL)
+# PESTAÑA 2: VENDEDORES / ALIADOS (CON ESCRITURA EN GOOGLE SHEETS)
 # =========================================================
 with tab_vendedor:
     st.subheader("Publica o Registra tu Inmueble")
@@ -283,7 +283,7 @@ with tab_vendedor:
         nombre_v = st.text_input("Nombre del Propietario / Asesor Inmobiliario:", key="nombre_v")
         telefono_v = st.text_input("WhatsApp de Contacto (ej: 0412...):", key="tel_v")
         
-        btn_vendedor = st.form_submit_button("📤 Procesar Inmueble y Subir Fotos a la Nube")
+        btn_vendedor = st.form_submit_button("📤 Registrar Inmueble y Subir Fotos a la Nube")
         
     if btn_vendedor:
         if not titulo_v or not telefono_v:
@@ -307,6 +307,24 @@ with tab_vendedor:
                             urls_fotos.append(res.get("secure_url"))
                         except Exception as e:
                             st.warning(f"No se pudo procesar una imagen: {e}")
+
+            # GUARDAR AUTOMÁTICAMENTE EN GOOGLE SHEETS
+            if conn is not None:
+                try:
+                    df_actual = conn.read(worksheet="Sheet1")
+                    nueva_fila = pd.DataFrame([{
+                        "titulo": titulo_v,
+                        "nicho": región_v,
+                        "operacion": operacion_v,
+                        "tipo": tipo_v,
+                        "precio": precio_v,
+                        "enlace_foto_o_info": urls_fotos[0] if urls_fotos else ""
+                    }])
+                    df_actualizado = pd.concat([df_actual, nueva_fila], ignore_index=True)
+                    conn.update(worksheet="Sheet1", data=df_actualizado)
+                    st.success("✅ ¡Inmueble guardado en Google Sheets con éxito!")
+                except Exception as e:
+                    st.warning(f"Aviso al escribir en la base de datos: {e}")
 
             st.success("¡Propiedad procesada con éxito!")
             
