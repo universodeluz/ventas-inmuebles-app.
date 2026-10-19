@@ -306,7 +306,7 @@ with tab_vendedor:
                         except Exception as e:
                             st.warning(f"No se pudo procesar una imagen: {e}")
 
-            if GOOGLE_SCRIPT_URL != "TU_URL_DE_GOOGLE_SCRIPT_AQUI":
+                        if GOOGLE_SCRIPT_URL != "TU_URL_DE_GOOGLE_SCRIPT_AQUI":
                 try:
                     payload = {
                         "titulo": titulo_v,
@@ -314,8 +314,7 @@ with tab_vendedor:
                         "operacion": operacion_v,
                         "tipo": tipo_v,
                         "precio": precio_v,
-                        "enlace_foto": urls_fotos[0] if urls_fotos else ""
-                                            "enlace_foto": " | ".join(urls_fotos) if urls_fotos else "Sin foto"
+                        "enlace_foto": " | ".join(urls_fotos) if urls_fotos else "Sin foto"
                     }
                     requests.post(GOOGLE_SCRIPT_URL, json=payload, timeout=5)
                 except Exception:
@@ -588,5 +587,4 @@ with tab_inventario:
     else:
         st.info("No se han cargado datos o la hoja de Google Sheets está vacía por los momentos.")
 
-                     
-        
+                
