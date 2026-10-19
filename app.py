@@ -54,8 +54,8 @@ df_inmuebles = cargar_inventario(SHEET_CSV_URL)
 
 # --- CONFIGURACIÓN DE CONTACTOS Y GRUPOS ---
 MI_NUMERO_WA = "584124792652" 
-LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
-LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
+LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/TU_ENLACE_MARGARITA_AQUI"
+LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/TU_ENLACE_CARACAS_AQUI"
 
 # --- BANNER SUPERIOR DE GRUPOS DE WHATSAPP ---
 st.info("💬 **¿Quieres unirte a nuestras comunidades activas en WhatsApp?**")
@@ -214,11 +214,10 @@ with tab_comprador:
             
             estilo_btn = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;"
             st.markdown(
-                f'<a href="{link_wa}" target="_blank" style="{estilo_btn}">📱 Enviar Requerimiento à WhatsApp</a>',
+                f'<a href="{link_wa}" target="_blank" style="{estilo_btn}">📱 Enviar Requerimiento a WhatsApp</a>',
                 unsafe_allow_html=True
-            )
-
-# =========================================================
+)
+                   # =========================================================
 # PESTAÑA 2: VENDEDORES / ALIADOS
 # =========================================================
 with tab_vendedor:
@@ -263,7 +262,7 @@ with tab_vendedor:
             tiene_planta = st.checkbox("Planta eléctrica / Transformador cerca")
             tiene_pozo = st.checkbox("Pozo de agua dulce")
         with col_s2:
-            tiene_vista = st.checkbox("Vista privilegiada (Mar / Ávila)")
+            tiene_vista = st.checkbox("Vista privileged (Mar / Ávila)")
             tiene_internet = st.checkbox("Internet de alta velocidad (Fibra/ABA)")
             
         st.markdown("### 📁 Estatus Legal")
@@ -306,7 +305,7 @@ with tab_vendedor:
                         except Exception as e:
                             st.warning(f"No se pudo procesar una imagen: {e}")
 
-     if GOOGLE_SCRIPT_URL != "TU_URL_DE_GOOGLE_SCRIPT_AQUI":
+            if GOOGLE_SCRIPT_URL != "TU_URL_DE_GOOGLE_SCRIPT_AQUI":
                 try:
                     payload = {
                         "titulo": titulo_v,
@@ -319,7 +318,7 @@ with tab_vendedor:
                     requests.post(GOOGLE_SCRIPT_URL, json=payload, timeout=5)
                 except Exception:
                     pass
-                    
+
             st.success("✨ ¡Inmueble procesado, fotos en la nube y sincronizado en Google Sheets!")
             
             servicios_lista = []
@@ -586,5 +585,3 @@ with tab_inventario:
         st.caption(f"Total de registros activos: {len(df_inmuebles)}")
     else:
         st.info("No se han cargado datos o la hoja de Google Sheets está vacía por los momentos.")
-
-                
