@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import cloudinary
@@ -28,16 +27,15 @@ st.caption("Conectando compradores, propietarios y tecnología inmobiliaria en N
 # --- CONFIGURACIÓN Y CONEXIÓN DE CLOUDINARY ---
 try:
     cloudinary.config(
-        cloud_name=st.secrets["CLOUDINARY_CLOUD_NAME"],
-        api_key=st.secrets["CLOUDINARY_API_KEY"],
-        api_secret=st.secrets["CLOUDINARY_API_SECRET"]
+        cloud_name=st.secrets.get("CLOUDINARY_CLOUD_NAME", ""),
+        api_key=st.secrets.get("CLOUDINARY_API_KEY", ""),
+        api_secret=st.secrets.get("CLOUDINARY_API_SECRET", "")
     )
     CLOUDINARY_ACTIVO = True
 except Exception:
     CLOUDINARY_ACTIVO = False
 
 # --- URL DEL GOOGLE APPS SCRIPT WEB APP ---
-# (Pega aquí la URL que copiaste de Google Apps Script que termina en /exec)
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz0orGQEFva4bPfWajY72CWUv-5vM1YgZd_yGYZYB-FCdeTUhJMVe9xj6WcvvBDbhM1/exec"
 
 # --- CONEXIÓN A GOOGLE SHEETS (LECTURA) ---
@@ -115,7 +113,7 @@ LOCALIDADES_LA_GUAIRA = [
 ]
 
 TIPOS_INMUEBLES = [
-    "Apartamento", "Casa", "Townhouse", "Posada / Hotel", "Local Comercial", "Terreno", "Oficina"
+    "Terreno", "Apartamento", "Casa", "Townhouse", "Posada / Hotel", "Local Comercial", "Oficina"
 ]
 
 # CREACIÓN DE PESTAÑAS
@@ -244,26 +242,26 @@ with tab_vendedor:
     localidad_v = st.selectbox("2. Localidad o Sector específico:", loc_v_opciones, key="loc_v")
 
     with st.form("form_vendedor_detalles"):
-        titulo_v = st.text_input("Título comercial corto (ej: Quinta en Guarenas Guatire):")
+        titulo_v = st.text_input("Título comercial corto (ej: Terreno amplio en Pampatar / Quinta en Caracas):")
         tipo_v = st.selectbox("Tipo de Inmueble:", TIPOS_INMUEBLES, key="tipo_v")
         operacion_v = st.radio("Tipo de Transacción:", ["Venta", "Alquiler"], key="op_v")
         
         col_v1, col_v2 = st.columns(2)
         with col_v1:
             precio_v = st.number_input("Precio de Oferta ($ USD):", min_value=0, value=85000, step=2500)
-            m2_construccion_v = st.number_input("Área de Construcción (m² techados):", min_value=0, value=150)
-            habitaciones_v = st.number_input("Habitaciones:", min_value=0, value=3)
+            m2_construccion_v = st.number_input("Área de Construcción (m² techados):", min_value=0, value=0 if tipo_v=="Terreno" else 150)
+            habitaciones_v = st.number_input("Habitaciones:", min_value=0, value=0 if tipo_v=="Terreno" else 3)
         with col_v2:
             m2_terreno_v = st.number_input("Área de Terreno / Parcela (m² totales):", min_value=0, value=500)
-            estado_amoblado = st.selectbox("Condición de amoblado:", ["Amoblado y Equipado de Lujo", "Semiamoblado", "Sin amoblar / Solo cocina"])
-            banos_v = st.number_input("Baños:", min_value=1, value=2)
+            estado_amoblado = st.selectbox("Condición / Equipamiento:", ["N/A (Terreno)", "Amoblado y Equipado de Lujo", "Semiamoblado", "Sin amoblar / Solo cocina"])
+            banos_v = st.number_input("Baños:", min_value=0, value=0 if tipo_v=="Terreno" else 2)
             
         st.markdown("### ⚡ Servicios de Resistencia y Conectividad")
         col_s1, col_s2 = st.columns(2)
         with col_s1:
-            tiene_piscina = st.checkbox("Piscina operativa")
-            tiene_planta = st.checkbox("Planta eléctrica (Total o Parcial)")
-            tiene_pozo = st.checkbox("Pozo de agua / Tanque grande")
+            tiene_piscina = st.checkbox("Piscina / Tanque constante")
+            tiene_planta = st.checkbox("Planta eléctrica / Transformador cerca")
+            tiene_pozo = st.checkbox("Pozo de agua dulce")
         with col_s2:
             tiene_vista = st.checkbox("Vista privilegiada (Mar / Ávila)")
             tiene_internet = st.checkbox("Internet de alta velocidad (Fibra/ABA)")
@@ -271,7 +269,7 @@ with tab_vendedor:
         st.markdown("### 📁 Estatus Legal")
         estatus_legal = st.selectbox(
             "Documentación:",
-            ["Documentos al día listos para firmar", "Ficha catastral y solvencia en trámite", "Sucesión / Hipoteca pendiente por liberar"]
+            ["Título de Propiedad Registrado listo para firmar", "Adjudicación / Carta Agrícola", "Ficha catastral / Solvencia en trámite", "Documento privado / En trámite"]
         )
         
         fotos_cargadas = st.file_uploader(
@@ -291,7 +289,6 @@ with tab_vendedor:
             st.error("Por favor completa el título de la propiedad y tu teléfono.")
         else:
             urls_fotos = []
-            
             if fotos_cargadas and CLOUDINARY_ACTIVO:
                 with st.spinner("☁️ Optimizando, subiendo fotos y sincronizando Google Sheets..."):
                     for foto in fotos_cargadas:
@@ -309,7 +306,6 @@ with tab_vendedor:
                         except Exception as e:
                             st.warning(f"No se pudo procesar una imagen: {e}")
 
-            # ENVÍO AUTOMÁTICO AL GOOGLE SHEETS VÍA WEB APP
             if GOOGLE_SCRIPT_URL != "TU_URL_DE_GOOGLE_SCRIPT_AQUI":
                 try:
                     payload = {
@@ -328,9 +324,9 @@ with tab_vendedor:
             
             servicios_lista = []
             if tiene_piscina: servicios_lista.append("Piscina")
-            if tiene_planta: servicios_lista.append("Planta")
-            if tiene_pozo: servicios_lista.append("Pozo/Tanque")
-            if tiene_vista: servicios_lista.append("Vista")
+            if tiene_planta: servicios_lista.append("Planta/Transformador")
+            if tiene_pozo: servicios_lista.append("Pozo Agua")
+            if tiene_vista: servicios_lista.append("Vista Panorámica")
             if tiene_internet: servicios_lista.append("Internet")
 
             titulo_corto = titulo_v[:80] + ("..." if len(titulo_v) > 80 else "")
@@ -382,8 +378,8 @@ with tab_inventario:
 # PESTAÑA 4: ASISTENTE DE TASACIÓN E INSPECCIÓN VISUAL POR IA
 # =========================================================
 with tab_ia:
-    st.subheader("🤖 Asistente de Tasación e Inspección Visual por IA")
-    st.markdown("El sistema evalúa de forma independiente los metros de construcción y terreno, adaptando el cálculo al sector seleccionado.")
+    st.subheader("🤖 Asistente de Tasación Técnica por IA")
+    st.markdown("El algoritmo evalúa el tipo de inmueble adaptando automáticamente los criterios de plusvalía y desarrollo.")
     
     región_t = st.selectbox(
         "1. Región / Estado:",
@@ -401,88 +397,46 @@ with tab_ia:
         loc_t_opciones = LOCALIDADES_LA_GUAIRA
         
     localidad_t = st.selectbox("2. Localidad o Sector específico:", loc_t_opciones, key="loc_t")
+    tipo_t = st.selectbox("3. Tipo de Inmueble a Tasar:", TIPOS_INMUEBLES, key="tipo_t")
 
-    with st.form("form_tasacion_ia_clean"):
-        st.markdown("### Datos Técnicos, Metrajes y Factores de Valor")
-        tipo_t = st.selectbox("Tipo de Inmueble:", TIPOS_INMUEBLES, key="tipo_t")
-        transaccion_t = st.radio("Objetivo de Tasación:", ["Valor de Venta Comercial", "Canon de Alquiler Sugerido"])
+    # --- FORMULARIO ADAPTATIVO: SI ES TERRENO O CONSTRUCCIÓN ---
+    with st.form("form_tasacion_ia_adaptativo"):
         
-        col_t1, col_t2 = st.columns(2)
-        with col_t1:
-            m2_construccion_t = st.number_input("Área de Construcción (m² techados):", min_value=0, value=120)
-            habitaciones_t = st.number_input("Habitaciones:", min_value=0, value=3, key="hab_t")
-            estado_amoblado_t = st.selectbox("Nivel de Equipamiento:", ["Amoblado y Equipado", "Semiamoblado", "Sin amoblar"])
-        with col_t2:
-            m2_terreno_t = st.number_input("Área de Terreno / Parcela (m² totales):", min_value=0, value=350)
-            banos_t = st.number_input("Baños:", min_value=1, value=2, key="ban_t")
-            antiguedad_t = st.selectbox("Antigüedad:", ["A estrenar / Nuevo", "Menos de 10 años", "Más de 10 años / A actualizar"])
+        if tipo_t == "Terreno":
+            st.markdown("### 📐 Parámetros Específicos para Valoración de Terrenos")
             
-        estado_conservacion = st.selectbox(
-            "Estado de Conservación:",
-            ["Excelente / Modernizado", "Bueno / Habitable", "A reparar / Para actualizar"]
-        )
-        
-        st.markdown("**Factores Críticos de Plusvalía:**")
-        t_piscina = st.checkbox("Tiene Piscina", key="tp")
-        t_planta = st.checkbox("Tiene Planta Eléctrica", key="tpl")
-        t_pozo = st.checkbox("Tiene Pozo o Tanque constante", key="tpz")
-        t_vista = st.checkbox("Tiene Vista privilegiada (Mar/Ávila/Montaña)", key="tv")
-        
-        st.markdown("---")
-        nombre_t = st.text_input("Tu Nombre / Contacto:", key="nombre_t")
-        whatsapp_t = st.text_input("Tu Número de WhatsApp:", key="wa_t")
-        
-        btn_ejecutar_tasacion = st.form_submit_button("🚀 Calcular Tasación por IA")
+            col_ter1, col_ter2 = st.columns(2)
+            with col_ter1:
+                area_m2_terreno = st.number_input("Área Total de la Parcela (m²):", min_value=1.0, value=500.0, step=25.0)
+                tipo_cerca = st.selectbox(
+                    "Tipo de Cerramiento / Lindero:",
+                    [
+                        "Muro perimetral de concreto frisado (+15%)",
+                        "Pared de bloques de concreto (+10%)",
+                        "Cerca de malla alfajor / Ciclón (+5%)",
+                        "Cerca viva / Trinchera (+2%)",
+                        "Sin cercar (Linderos abiertos) (0%)"
+                    ]
+                )
+                topografia = st.selectbox(
+                    "Topografía y Nivel del Suelo:",
+                    ["Plana (100% aprovechable) (+10%)", "Semi-plana / Colina suave (0%)", "Inclinada / Pendiente severa (-15%)"]
+                )
+            
+            with col_ter2:
+                acceso_vial = st.selectbox(
+                    "Acceso Vial y Entorno:",
+                    ["Calle Asfaltada (+10%)", "Calle de Granzón / Consolidada (0%)", "Camino de Tierra / Rústico (-10%)"]
+                )
+                zonificacion = st.selectbox(
+                    "Zonificación / Uso de Suelo:",
+                    ["Comercial / Mixto (+15%)", "Residencial (R1/R2/R3) (+10%)", "Industrial / Galpón (+5%)", "Agrícola / Turístico (0%)"]
+                )
+                estatus_legal = st.selectbox(
+                    "Estatus Legal:",
+                    ["Título de Propiedad Registrado (+10%)", "Adjudicación / Carta Agrícola (0%)", "Documento Privado / En trámite (-15%)"]
+                )
 
-    if btn_ejecutar_tasacion:
-        if not whatsapp_t:
-            st.error("Por favor ingresa tu número de WhatsApp para enviarte el reporte detallado.")
-        else:
-            # Base referencial de valor por m2 según región
-            if "Margarita" in región_t or "Caracas" in región_t:
-                base_m2_const = 750
-                base_m2_terr = 60
-            else:
-                base_m2_const = 450
-                base_m2_terr = 30
-            
-            # Ponderación de factores
-            factor = 1.0
-            if "Excelente" in estado_conservacion: factor += 0.15
-            elif "A reparar" in estado_conservacion: factor -= 0.20
-            
-            if "Amoblado y Equipado" in estado_amoblado_t: factor += 0.10
-            if t_piscina: factor += 0.05
-            if t_planta: factor += 0.08
-            if t_pozo: factor += 0.05
-            if t_vista: factor += 0.07
-
-            # Cálculo de valoración
-            valor_construccion = m2_construccion_t * base_m2_const * factor
-            valor_terreno = m2_terreno_t * base_m2_terr * factor
-            valor_total_venta = valor_construccion + valor_terreno
-            
-            if "Alquiler" in transaccion_t:
-                valor_estimado = round(valor_total_venta * 0.007, 2)
-                tipo_resultado = "Canon de Alquiler Sugerido Mensual"
-            else:
-                valor_estimado = round(valor_total_venta, 2)
-                tipo_resultado = "Valor Comercial Estimado de Venta"
-
-            st.success(f"💰 **{tipo_resultado}:** ${valor_estimado:,.2f} USD")
-            
-            # Mensaje para enviar el reporte de tasación por WhatsApp
-            msg_tasacion = (
-                f"Hola, solicito el informe formal de tasación por IA:%0A"
-                f"*Solicitante:* {nombre_t} ({whatsapp_t})%0A"
-                f"*Propiedad:* {tipo_t} en {región_t} - {localidad_t}%0A"
-                f"*Área Techada:* {m2_construccion_t} m² | *Terreno:* {m2_terreno_t} m²%0A"
-                f"*Resultado {tipo_resultado}:* ${valor_estimado:,.2f} USD"
-            )
-            link_wa_t = f"https://wa.me/{MI_NUMERO_WA}?text={msg_tasacion}"
-            
-            estilo_btn_t = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;"
-            st.markdown(
-                f'<a href="{link_wa_t}" target="_blank" style="{estilo_btn_t}">📱 Recibir Informe Detallado en WhatsApp</a>',
-                unsafe_allow_html=True
-            )
+            st.markdown("#### 💡 Servicios Públicos Instalados y Plusvalía Directa")
+            col_ts1, col_ts2 = st.columns(2)
+ 
