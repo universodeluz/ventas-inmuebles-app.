@@ -31,6 +31,11 @@ SHEET_URL = "https://docs.google.com/spreadsheets/d/1vT7Uv5J-z0K8mR... (tu enlac
 SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1vT7Uv5J-z0K8mR.../gviz/tq?tqx=out:csv"
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz0orGQEFva4bPfWajY72CWUv-5vM1YgZd_yGYZYB-FCdeTUhJMVe9xj6WcvvBDbhM1/exec"
 
+try:
+    conn = st.connection("gsheets", type="gsheets")
+except Exception:
+    conn = None
+
 @st.cache_data(ttl=10)
 def cargar_inventario(url):
     try:
@@ -43,7 +48,7 @@ df_inmuebles = cargar_inventario(SHEET_CSV_URL)
 
 # --- CONFIGURACIÓN DE CONTACTOS Y GRUPOS ---
 MI_NUMERO_WA = "584124792652"
-ENLACE_GRUPO_WA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"  # Reemplaza con el enlace real de tu grupo
+ENLACE_GRUPO_WA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"  # <--- Pon aquí el enlace de tu grupo
 
 # --- CREACIÓN DE TABS / PESTAÑAS ---
 tab1, tab2, tab3 = st.tabs(["📝 Registrar Inmueble", "📂 Inventario Google Sheets", "💬 Grupo y Contacto WhatsApp"])
@@ -51,28 +56,28 @@ tab1, tab2, tab3 = st.tabs(["📝 Registrar Inmueble", "📂 Inventario Google S
 with tab1:
     st.subheader("Registro de Nuevo Inmueble")
     
-    titulo_prop = st.text_input("Título de la Propiedad (ej: Espectacular apartamento en Chacao)")
-    nicho = st.selectbox("Nicho / Región:", ["Isla de Margarita", "Gran Caracas", "La Guaira"])
-    operacion = st.selectbox("Tipo de Operación:", ["Venta", "Alquiler", "Traspaso"])
-    tipo_inm = st.selectbox("Tipo de Inmueble:", ["Apartamento", "Casa", "Townhouse", "Local Comercial", "Terreno"])
-    precio = st.text_input("Precio (ej: $85,000 USD o Bs.)")
-    
-    st.markdown("### 📸 Evidencia Fotográfica")
-    fotos_tasacion = st.file_uploader(
-        "Sube fotos del inmueble desde tu celular (puedes seleccionar varias):",
-        type=["jpg", "png", "jpeg", "heic"],
-        accept_multiple_files=True,
-        key="tasacion_files"
-    )
-    
-    st.markdown("---")
-    nombre_t = st.text_input("Nombre del Propietario / Asesor Inmobiliario:")
-    whatsapp_t = st.text_input("WhatsApp de Contacto (ej: 0412...):")
-    
-    # Botón estándar sin riesgo de AttributeError
-    btn_ejecutar = st.button("📦 Procesar Inmueble y Subir Fotos a la Nube", use_container_width=True)
+    with st.form("form_registro_inmueble"):
+        titulo_prop = st.text_input("Título de la Propiedad (ej: Espectacular apartamento en Chacao)")
+        nicho = st.selectbox("Nicho / Región:", ["Isla de Margarita", "Gran Caracas", "La Guaira"])
+        operacion = st.selectbox("Tipo de Operación:", ["Venta", "Alquiler", "Traspaso"])
+        tipo_inm = st.selectbox("Tipo de Inmueble:", ["Apartamento", "Casa", "Townhouse", "Local Comercial", "Terreno"])
+        precio = st.text_input("Precio (ej: $85,000 USD o Bs.)")
+        
+        st.markdown("### 📸 Evidencia Fotográfica")
+        fotos_tasacion = st.file_uploader(
+            "Sube fotos del inmueble (puedes seleccionar varias):",
+            type=["jpg", "png", "jpeg", "heic"],
+            accept_multiple_files=True,
+            key="tasacion_files"
+        )
+        
+        st.markdown("---")
+        nombre_t = st.text_input("Tu Nombre / Asesor Inmobiliario:")
+        whatsapp_t = st.text_input("Tu Número de WhatsApp (ej: 0412...):")
+        
+        btn_ejecutar_tasacion = st.form_submit_button("Procesar Inmueble y Subir Fotos a la Nube")
 
-    if btn_ejecutar:
+    if btn_ejecutar_tasacion:
         if not titulo_prop or not precio:
             st.error("Por favor completa al menos el título y el precio del inmueble.")
         else:
@@ -86,14 +91,14 @@ with tab1:
                         except Exception as e:
                             st.warning(f"No se pudo subir la foto {idx+1}: {e}")
             
-            # Preparar mensaje para WhatsApp
+            # Preparar texto para WhatsApp
             texto_wa = f"Hola, nuevo inmueble registrado:\nPropiedad: {titulo_prop}\nTransacción: {operacion} ({tipo_inm})\nRegión: {nicho}\nPrecio: {precio}\n"
             if enlaces_fotos:
                 texto_wa += f"Fotos en la Nube ({len(enlaces_fotos)}):\n"
                 for i, link in enumerate(enlaces_fotos):
                     texto_wa += f"📷 Foto {i+1}: {link}\n"
             
-            # Enviar datos a Google Sheets vía Apps Script
+            # Enviar a Google Apps Script
             datos_google = {
                 "titulo": titulo_prop,
                 "nicho": nicho,
@@ -106,17 +111,14 @@ with tab1:
             try:
                 response = requests.post(GOOGLE_SCRIPT_URL, json=datos_google)
                 if response.status_code == 200:
-                    st.success("¡Propiedad procesada y fotos subidas a la nube con éxito!")
+                    st.success("¡Inmueble registrado exitosamente en Google Sheets y en la nube!")
                 else:
-                    st.info("El registro fue enviado a la base de datos.")
+                    st.warning("El registro se procesó, pero hubo una respuesta inusual de Google Sheets.")
             except Exception as ex:
-                st.warning(f"Procesado localmente. Error al sincronizar tabla: {ex}")
+                st.error(f"Error al conectar con Google Apps Script: {ex}")
             
-            # Botón de envío directo a WhatsApp
-            import urllib.parse
-            mensaje_encoded = urllib.parse.quote(texto_wa)
-            url_wa_directo = f"https://wa.me/{MI_NUMERO_WA}?text={mensaje_encoded}"
-            st.link_button("📱 Toca aquí para Enviar Notificación con Fotos a WhatsApp", url_wa_directo, use_container_width=True)
+            st.markdown("### Enlace listo para compartir:")
+            st.code(texto_wa)
 
 with tab2:
     st.subheader("Inventario Conectado")
@@ -130,5 +132,6 @@ with tab3:
     st.subheader("Comunidad y Canales de WhatsApp")
     st.write("Únete a nuestra comunidad de asesores e inversores para recibir captaciones en tiempo real.")
     
-    st.link_button("👉 Unirse al Grupo de WhatsApp", ENLACE_GRUPO_WA, use_container_width=True)
-    st.link_button("💬 Contactar al Administrador por WhatsApp", f"https://wa.me/{MI_NUMERO_WA}", use_container_width=True)
+    st.link_button("👉 Unirse al Grupo de WhatsApp", ENLACE_GRUPO_WA)
+    st.link_button("💬 Contactar al Administrador por WhatsApp", f"https://wa.me/{MI_NUMERO_WA}")
+
