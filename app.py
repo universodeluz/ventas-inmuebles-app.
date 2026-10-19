@@ -319,7 +319,7 @@ with tab_vendedor:
                     requests.post(GOOGLE_SCRIPT_URL, json=payload, timeout=5)
                 except Exception:
                     pass
-
+                    
             st.success("✨ ¡Inmueble procesado, fotos en la nube y sincronizado en Google Sheets!")
             
             servicios_lista = []
