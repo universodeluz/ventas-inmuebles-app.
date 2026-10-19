@@ -306,7 +306,7 @@ with tab_vendedor:
                         except Exception as e:
                             st.warning(f"No se pudo procesar una imagen: {e}")
 
-                        if GOOGLE_SCRIPT_URL != "TU_URL_DE_GOOGLE_SCRIPT_AQUI":
+     if GOOGLE_SCRIPT_URL != "TU_URL_DE_GOOGLE_SCRIPT_AQUI":
                 try:
                     payload = {
                         "titulo": titulo_v,
