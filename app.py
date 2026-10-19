@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import cloudinary
@@ -37,7 +38,7 @@ except Exception:
 
 # --- URL DEL GOOGLE APPS SCRIPT WEB APP ---
 # (Pega aquí la URL que copiaste de Google Apps Script que termina en /exec)
-GOOGLE_SCRIPT_URL = "TU_URL_DE_GOOGLE_SCRIPT_AQUI"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz0orGQEFva4bPfWajY72CWUv-5vM1YgZd_yGYZYB-FCdeTUhJMVe9xj6WcvvBDbhM1/exec"
 
 # --- CONEXIÓN A GOOGLE SHEETS (LECTURA) ---
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1AkLUKg1FgjgEPeJmSY9oE-1v2Sgld8-4wsu8og3XMEU/edit?usp=sharing"
@@ -408,12 +409,12 @@ with tab_ia:
         
         col_t1, col_t2 = st.columns(2)
         with col_t1:
-            m2_construccion_t = st.number_input("Área de Construcción (m² techados):", min_value=10, value=120)
-            habitaciones_t = st.number_input("Habitaciones:", min_value=0, value=3)
+            m2_construccion_t = st.number_input("Área de Construcción (m² techados):", min_value=0, value=120)
+            habitaciones_t = st.number_input("Habitaciones:", min_value=0, value=3, key="hab_t")
             estado_amoblado_t = st.selectbox("Nivel de Equipamiento:", ["Amoblado y Equipado", "Semiamoblado", "Sin amoblar"])
         with col_t2:
             m2_terreno_t = st.number_input("Área de Terreno / Parcela (m² totales):", min_value=0, value=350)
-            banos_t = st.number_input("Baños:", min_value=1, value=2)
+            banos_t = st.number_input("Baños:", min_value=1, value=2, key="ban_t")
             antiguedad_t = st.selectbox("Antigüedad:", ["A estrenar / Nuevo", "Menos de 10 años", "Más de 10 años / A actualizar"])
             
         estado_conservacion = st.selectbox(
@@ -437,7 +438,51 @@ with tab_ia:
         if not whatsapp_t:
             st.error("Por favor ingresa tu número de WhatsApp para enviarte el reporte detallado.")
         else:
-            base_m2_const = 750 if "Margarita" in región_t or "Caracas" in región_t else 450
-            base_m2_terr = 60 if "Margarita" in región_t or "Caracas" in región_t else 30
+            # Base referencial de valor por m2 según región
+            if "Margarita" in región_t or "Caracas" in región_t:
+                base_m2_const = 750
+                base_m2_terr = 60
+            else:
+                base_m2_const = 450
+                base_m2_terr = 30
             
-            if "Alquiler" in tran
+            # Ponderación de factores
+            factor = 1.0
+            if "Excelente" in estado_conservacion: factor += 0.15
+            elif "A reparar" in estado_conservacion: factor -= 0.20
+            
+            if "Amoblado y Equipado" in estado_amoblado_t: factor += 0.10
+            if t_piscina: factor += 0.05
+            if t_planta: factor += 0.08
+            if t_pozo: factor += 0.05
+            if t_vista: factor += 0.07
+
+            # Cálculo de valoración
+            valor_construccion = m2_construccion_t * base_m2_const * factor
+            valor_terreno = m2_terreno_t * base_m2_terr * factor
+            valor_total_venta = valor_construccion + valor_terreno
+            
+            if "Alquiler" in transaccion_t:
+                valor_estimado = round(valor_total_venta * 0.007, 2)
+                tipo_resultado = "Canon de Alquiler Sugerido Mensual"
+            else:
+                valor_estimado = round(valor_total_venta, 2)
+                tipo_resultado = "Valor Comercial Estimado de Venta"
+
+            st.success(f"💰 **{tipo_resultado}:** ${valor_estimado:,.2f} USD")
+            
+            # Mensaje para enviar el reporte de tasación por WhatsApp
+            msg_tasacion = (
+                f"Hola, solicito el informe formal de tasación por IA:%0A"
+                f"*Solicitante:* {nombre_t} ({whatsapp_t})%0A"
+                f"*Propiedad:* {tipo_t} en {región_t} - {localidad_t}%0A"
+                f"*Área Techada:* {m2_construccion_t} m² | *Terreno:* {m2_terreno_t} m²%0A"
+                f"*Resultado {tipo_resultado}:* ${valor_estimado:,.2f} USD"
+            )
+            link_wa_t = f"https://wa.me/{MI_NUMERO_WA}?text={msg_tasacion}"
+            
+            estilo_btn_t = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;"
+            st.markdown(
+                f'<a href="{link_wa_t}" target="_blank" style="{estilo_btn_t}">📱 Recibir Informe Detallado en WhatsApp</a>',
+                unsafe_allow_html=True
+            )
