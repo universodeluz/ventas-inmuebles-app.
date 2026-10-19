@@ -315,6 +315,7 @@ with tab_vendedor:
                         "tipo": tipo_v,
                         "precio": precio_v,
                         "enlace_foto": urls_fotos[0] if urls_fotos else ""
+                                            "enlace_foto": " | ".join(urls_fotos) if urls_fotos else "Sin foto"
                     }
                     requests.post(GOOGLE_SCRIPT_URL, json=payload, timeout=5)
                 except Exception:
@@ -354,9 +355,10 @@ with tab_vendedor:
             
             estilo_btn_v = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;"
             st.markdown(
-                f'<a href="{link_wa_v}" target="_blank" style="{estilo_btn_v}">📱 Toca aquí para Enviar Notificación con Fotos à WhatsApp</a>',
+                f'<a href="{link_wa_v}" target="_blank" style="{estilo_btn_v}">📱 Toca aquí para Enviar Notificación con Fotos a WhatsApp</a>',
                 unsafe_allow_html=True
             )
+
 # =========================================================
 # PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA
 # =========================================================
@@ -586,4 +588,5 @@ with tab_inventario:
     else:
         st.info("No se han cargado datos o la hoja de Google Sheets está vacía por los momentos.")
 
- 
+                     
+        
