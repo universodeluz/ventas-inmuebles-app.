@@ -588,17 +588,32 @@ with tab_ia:
             )
 
 # =========================================================
-# PESTAÑA 4: INVENTARIO GOOGLE SHEETS
+# PESTAÑA 4: INVENTARIO GOOGLE SHEETS (PROTEGIDO CON CONTRASEÑA DE ADMIN)
 # =========================================================
 with tab_inventario:
     st.subheader("📂 Inventario General Conectado a Google Sheets")
-    st.markdown("Visualización en tiempo real de los inmuebles cargados en la base de datos.")
+    st.markdown("Área restringida exclusiva para la administración del portal.")
     
-    st.link_button("📊 Abrir/Editar Hoja de Cálculo Directa en Google Sheets", SHEET_URL, use_container_width=True)
-    st.markdown("---")
+    # Definición de tu clave de administrador (puedes cambiarla aquí)
+    CLAVE_ADMIN = "tu_clave_secreta_2026"  # <--- Cambia esto por tu contraseña segura
+    
+    # Campo para introducir la clave en la pestaña
+    password_ingresada = st.text_input("Introduce la clave de Administrador para acceder:", type="password", key="pass_admin_inv")
+    
+    if password_ingresada == CLAVE_ADMIN:
+        st.success("🔓 Acceso de administrador concedido.")
+        st.markdown("---")
+        st.link_button("📊 Abrir/Editar Hoja de Cálculo Directa en Google Sheets", SHEET_URL, use_container_width=True)
+        st.markdown("---")
 
-    if df_inmuebles is not None and not df_inmuebles.empty:
-        st.dataframe(df_inmuebles, use_container_width=True)
-        st.caption(f"Total de registros activos: {len(df_inmuebles)}")
+        if df_inmuebles is not None and not df_inmuebles.empty:
+            st.dataframe(df_inmuebles, use_container_width=True)
+            st.caption(f"Total de registros activos en la base de datos: {len(df_inmuebles)}")
+        else:
+            st.info("No se han cargado datos o la hoja de Google Sheets está vacía por los momentos.")
+            
+    elif password_ingresada != "":
+        st.error("❌ Clave incorrecta. Acceso denegado.")
     else:
-        st.info("No se han cargado datos o la hoja de Google Sheets está vacía por los momentos.")
+        st.warning("🔒 Por favor introduce la contraseña de administrador para visualizar el inventario y los accesos.")
+
