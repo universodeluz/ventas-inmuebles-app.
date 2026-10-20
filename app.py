@@ -7,7 +7,7 @@ import io
 import requests
 import json
 
-# Intento de importar soporte para formatos de iPhone/Android (HEIC)
+# Soporte para formatos de imagen móvil (HEIC de iPhone/Android)
 try:
     from pillow_heif import register_heif_opener
     register_heif_opener()
@@ -67,56 +67,88 @@ with col_top2:
 
 st.markdown("---")
 
-# --- LISTAS DE LOCALIDADES ---
-LOCALIDADES_MARGARITA = [
-    "Pampatar (Municipio Maneiro - Alta Plusvalía)",
-    "Costa Azul / Playa El Ángel (Municipio Maneiro)",
-    "Porlamar - Centro y Av. 4 de Mayo (Municipio Mariño)",
-    "La Asunción (Municipio Arismendi)",
-    "Juan Griego (Municipio Marcano)",
-    "El Valle del Espíritu Santo (Municipio García)",
-    "Playa El Agua / Manzanillo (Municipio Antolín del Campo)",
-    "Punta de Piedras (Municipio Tubores)",
-    "Península de Macanao",
-    "Coche (Municipio Villalba)"
-]
-
-LOCALIDADES_CARACAS = [
-    "Las Mercedes (Municipio Baruta)",
-    "Altamira (Municipio Chacao)",
-    "El Hatillo (Pueblo y Urbanizaciones)",
-    "El Junquito (Distrito Capital)",
-    "Chacaíto / Campo Alegre / El Rosal",
-    "La Castellana / Los Palos Grandes",
-    "Santa Fe / Caurimare / Las Minitas",
-    "Libertador (Centro, El Recreo, Candelaria, San Bernardino)",
-    "Sucre (Petare / Lechería / Terrazas del Ávila)"
-]
-
-LOCALIDADES_MIRANDA = [
-    "Guarenas / Guatire (Plaza y Zamora)",
-    "Los Teques / Carrizal / Los Salias (Altos Mirandinos)",
-    "Valles del Tuy (Cúa, Ocumare, Charallave)",
-    "Barlovento: Río Chico / San José / Mamporal / Cúpira",
-    "Otro sector de Miranda"
-]
-
-LOCALIDADES_LA_GUAIRA = [
-    "El Junko (Estado La Guaira / Club de Campo)",
-    "Caraballeda (Playa Grande / Caribe)",
-    "Macuto",
-    "Catia La Mar",
-    "Maiquetía",
-    "La Guaira (Casco Histórico)",
-    "Naiguatá",
-    "Caruao"
-]
+# --- ESTRUCTURA GEOGRÁFICA HIPERDETALLADA ---
+ESTRUCTURA_GEOGRAFICA = {
+    "Isla de Margarita (Nueva Esparta)": {
+        "Municipio Antolín del Campo": [
+            "Playa El Agua", "La Mira", "El Tirano / Puerto Fermín", "Manzanillo", "Aricagua",
+            "Playa Parguito", "El Cardón", "Paraguachí (Casco Histórico)", "La Plaza", "Lomas de Antolín", "El Salado"
+        ],
+        "Municipio Maneiro": [
+            "Pampatar (Casco Histórico)", "Costa Azul", "Playa El Ángel", "Jorge Coll", "Los Naranjos",
+            "Moreno / Playa Moreno", "San Lorenzo", "Apostadero", "Las Salinas", "Cueva del Sapo"
+        ],
+        "Municipio Mariño": [
+            "Porlamar Centro", "Av. 4 de Mayo", "Av. Santiago Mariño", "Bella Vista", "Genovés",
+            "Los Cocos", "Pueblo Nuevo", "Av. Bolívar", "Llano Adentro", "Palguarime"
+        ],
+        "Municipio Arismendi": [
+            "La Asunción Centro", "Atamo Sur", "Atamo Norte", "Guacuco / Playa Guacuco", "Catalán",
+            "El Salado de La Asunción", "La Portada", "Salamanca"
+        ],
+        "Municipio Marcano": [
+            "Juan Griego Centro", "La Galera", "Las Piedras", "Pedregales", "Los Millanes", "Av. Jesús Rafael Leandro"
+        ],
+        "Municipio García": [
+            "El Valle del Espíritu Santo", "Villa Rosa", "San Antonio", "Conchesero", "La Cruz Grande", "Los Olivos"
+        ],
+        "Municipio Díaz": [
+            "San Juan Bautista", "El Yaque", "El Espinal", "Cotoperiz", "Las Barrancas", "La Guardia"
+        ],
+        "Municipio Tubores": [
+            "Punta de Piedras", "El Guamache", "Las Cuotas", "Las Marites"
+        ],
+        "Municipio Península de Macanao": [
+            "Boca de Río", "San Francisco", "Boca de Pozo", "Punta Arenas", "El Horcón"
+        ],
+        "Municipio Villalba (Coche)": [
+            "San Pedro de Coche", "Playa La Punta", "El Amor", "Güinima"
+        ]
+    },
+    "Caracas (Distrito Capital)": {
+        "Municipio Chacao": [
+            "Altamira", "Los Palos Grandes", "La Castellana", "El Rosal", "Campo Alegre", "Chacao Centro", "Bello Campo"
+        ],
+        "Municipio Baruta": [
+            "Las Mercedes", "Prados del Este", "Santa Fe", "Caurimare", "El Peñón", "Colinas de Bello Monte", "Manzanares", "Alto Hatillo"
+        ],
+        "Municipio El Hatillo": [
+            "Pueblo de El Hatillo", "La Lagunita", "La Boyera", "El Encantado", "Oripoto", "Los Naranjos de El Hatillo"
+        ],
+        "Municipio Libertador": [
+            "El Recreo / Sabana Grande", "La Candelaria", "San Bernardino", "Montalbán", "El Paraíso", "Centro / Capitolio"
+        ]
+    },
+    "Estado Miranda": {
+        "Municipio Plaza (Guarenas)": [
+            "Nueva Casarapa", "Ciudad Casarapa", "Terrazas del Este", "Guarenas Centro", "Oropeza Castillo"
+        ],
+        "Municipio Zamora (Guatire)": [
+            "Castillejo", "El Ingenio", "Valle Arriba", "Guatire Centro", "La Rosa"
+        ],
+        "Municipio Los Salias (San Antonio)": [
+            "San Antonio de los Altos", "Los Castillitos", "Las Minas", "La Morita"
+        ],
+        "Municipio Guaicaipuro (Los Teques)": [
+            "Los Teques Centro", "El Paso", "La Matica", "Venezia"
+        ],
+        "Municipio Cristóbal Rojas (Charallave)": [
+            "Charallave Centro", "La Estrella", "Paso Real", "Ciudad Miranda"
+        ]
+    },
+    "Estado La Guaira": {
+        "Municipio Vargas": [
+            "Caraballeda (Playa Grande / Caribe)", "Macuto", "Catia La Mar", "Maiquetía", "El Junko / Club de Campo",
+            "Naiguatá", "Los Corales", "Tanaguarena"
+        ]
+    }
+}
 
 TIPOS_INMUEBLES = [
     "Terreno", "Apartamento", "Casa", "Townhouse", "Posada / Hotel", "Local Comercial", "Oficina"
 ]
 
-# CREACIÓN DE PESTAÑAS (Tasación como Pestaña 3 e Inventario como Pestaña 4)
+# CREACIÓN DE PESTAÑAS (Tasación IA en Pestaña 3 e Inventario en Pestaña 4)
 tab_comprador, tab_vendedor, tab_ia, tab_inventario = st.tabs([
     "🔍 Buscar Inmueble", 
     "📝 Publicar Inmueble",
@@ -125,27 +157,14 @@ tab_comprador, tab_vendedor, tab_ia, tab_inventario = st.tabs([
 ])
 
 # =========================================================
-# PESTAÑA 1: COMPRADORES
+# PESTAÑA 1: COMPRADORES (UBICACIÓN EN CASCADA)
 # =========================================================
 with tab_comprador:
     st.subheader("Búsqueda Avanzada de Inmuebles")
     
-    nicho = st.selectbox(
-        "1. Selecciona el Estado o Región principal:",
-        ["Isla de Margarita (Nueva Esparta)", "Caracas (Distrito Capital)", "Estado Miranda", "Estado La Guaira"],
-        key="nicho_c"
-    )
-    
-    if "Margarita" in nicho:
-        loc_opciones = LOCALIDADES_MARGARITA
-    elif "Caracas" in nicho:
-        loc_opciones = LOCALIDADES_CARACAS
-    elif "Miranda" in nicho:
-        loc_opciones = LOCALIDADES_MIRANDA
-    else:
-        loc_opciones = LOCALIDADES_LA_GUAIRA
-        
-    localidad = st.selectbox("2. Selecciona la localidad o sector específico:", loc_opciones, key="loc_c")
+    nicho = st.selectbox("1. Estado o Región principal:", list(ESTRUCTURA_GEOGRAFICA.keys()), key="nicho_c")
+    mun_c = st.selectbox("2. Municipio:", list(ESTRUCTURA_GEOGRAFICA[nicho].keys()), key="mun_c")
+    sector_c = st.selectbox("3. Urbanización / Sector específico:", ESTRUCTURA_GEOGRAFICA[nicho][mun_c], key="sec_c")
 
     with st.form("form_comprador_detalles"):
         operacion = st.radio("Transacción:", ["Comprar", "Alquilar"])
@@ -204,7 +223,7 @@ with tab_comprador:
                 f"Hola, nuevo requerimiento de comprador:%0A"
                 f"*Cliente:* {nombre_c} ({telefono_c})%0A"
                 f"*Transacción:* {operacion} ({tipo_inmueble})%0A"
-                f"*Región:* {nicho} - {localidad}%0A"
+                f"*Ubicación:* {nicho} - {mun_c} ({sector_c})%0A"
                 f"*Condición:* {amoblado_filtro}%0A"
                 f"*Presupuesto Máx:* ${presupuesto_max} USD%0A"
                 f"*Extras exigidos:* {', '.join(extras_busqueda) if extras_busqueda else 'Ninguno'}%0A"
@@ -217,31 +236,18 @@ with tab_comprador:
                 f'<a href="{link_wa}" target="_blank" style="{estilo_btn}">📱 Enviar Requerimiento a WhatsApp</a>',
                 unsafe_allow_html=True
 )
-                   # =========================================================
-# PESTAÑA 2: VENDEDORES / ALIADOS
+# =========================================================
+# PESTAÑA 2: VENDEDORES / ALIADOS (CONEXIÓN Y REGISTRO EN CASCADA)
 # =========================================================
 with tab_vendedor:
     st.subheader("Publica o Registra tu Inmueble")
     
-    región_v = st.selectbox(
-        "1. Estado o Región de la propiedad:",
-        ["Isla de Margarita (Nueva Esparta)", "Caracas (Distrito Capital)", "Estado Miranda", "Estado La Guaira"],
-        key="reg_v"
-    )
-    
-    if "Margarita" in región_v:
-        loc_v_opciones = LOCALIDADES_MARGARITA
-    elif "Caracas" in región_v:
-        loc_v_opciones = LOCALIDADES_CARACAS
-    elif "Miranda" in región_v:
-        loc_v_opciones = LOCALIDADES_MIRANDA
-    else:
-        loc_v_opciones = LOCALIDADES_LA_GUAIRA
-        
-    localidad_v = st.selectbox("2. Localidad o Sector específico:", loc_v_opciones, key="loc_v")
+    región_v = st.selectbox("1. Estado o Región:", list(ESTRUCTURA_GEOGRAFICA.keys()), key="reg_v")
+    mun_v = st.selectbox("2. Municipio:", list(ESTRUCTURA_GEOGRAFICA[región_v].keys()), key="mun_v")
+    sector_v = st.selectbox("3. Urbanización / Sector específico:", ESTRUCTURA_GEOGRAFICA[región_v][mun_v], key="sec_v")
 
     with st.form("form_vendedor_detalles"):
-        titulo_v = st.text_input("Título comercial corto (ej: Terreno amplio en Pampatar / Quinta en Caracas):")
+        titulo_v = st.text_input("Título comercial corto (ej: Terreno en La Mira / Quinta en Las Mercedes):")
         tipo_v = st.selectbox("Tipo de Inmueble:", TIPOS_INMUEBLES, key="tipo_v")
         operacion_v = st.radio("Tipo de Transacción:", ["Venta", "Alquiler"], key="op_v")
         
@@ -262,7 +268,7 @@ with tab_vendedor:
             tiene_planta = st.checkbox("Planta eléctrica / Transformador cerca")
             tiene_pozo = st.checkbox("Pozo de agua dulce")
         with col_s2:
-            tiene_vista = st.checkbox("Vista privileged (Mar / Ávila)")
+            tiene_vista = st.checkbox("Vista privilegiada (Mar / Ávila / Montaña)")
             tiene_internet = st.checkbox("Internet de alta velocidad (Fibra/ABA)")
             
         st.markdown("### 📁 Estatus Legal")
@@ -309,7 +315,7 @@ with tab_vendedor:
                 try:
                     payload = {
                         "titulo": titulo_v,
-                        "nicho": región_v,
+                        "nicho": f"{región_v} - {mun_v} ({sector_v})",
                         "operacion": operacion_v,
                         "tipo": tipo_v,
                         "precio": precio_v,
@@ -339,7 +345,7 @@ with tab_vendedor:
                 f"Hola, nuevo inmueble registrado:%0A"
                 f"*Propiedad:* {titulo_corto}%0A"
                 f"*Transacción:* {operacion_v} ({tipo_v})%0A"
-                f"*Región:* {región_v} - {localidad_v}%0A"
+                f"*Ubicación Exacta:* {región_v} - {mun_v} ({sector_v})%0A"
                 f"*Precio:* ${precio_v} USD%0A"
                 f"*Construcción:* {m2_construccion_v} m² | *Terreno:* {m2_terreno_v} m²%0A"
                 f"*Hab:* {habitaciones_v} | *Baños:* {banos_v}%0A"
@@ -358,29 +364,16 @@ with tab_vendedor:
             )
 
 # =========================================================
-# PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA
+# PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA (CON VALORACIÓN POR SECTOR)
 # =========================================================
 with tab_ia:
     st.subheader("🤖 Asistente de Tasación Técnica por IA")
-    st.markdown("Selecciona el tipo de inmueble para desplegar los factores de valoración correspondientes.")
+    st.markdown("Cálculo algorítmico adaptado al valor comercial por Municipio y Sector específico.")
     
-    región_t = st.selectbox(
-        "1. Región / Estado:",
-        ["Isla de Margarita (Nueva Esparta)", "Caracas (Distrito Capital)", "Estado Miranda", "Estado La Guaira"],
-        key="reg_t"
-    )
-    
-    if "Margarita" in región_t:
-        loc_t_opciones = LOCALIDADES_MARGARITA
-    elif "Caracas" in región_t:
-        loc_t_opciones = LOCALIDADES_CARACAS
-    elif "Miranda" in región_t:
-        loc_t_opciones = LOCALIDADES_MIRANDA
-    else:
-        loc_t_opciones = LOCALIDADES_LA_GUAIRA
-        
-    localidad_t = st.selectbox("2. Localidad o Sector específico:", loc_t_opciones, key="loc_t")
-    tipo_t = st.selectbox("3. Tipo de Inmueble a Tasar:", TIPOS_INMUEBLES, key="tipo_t")
+    región_t = st.selectbox("1. Estado o Región:", list(ESTRUCTURA_GEOGRAFICA.keys()), key="reg_t")
+    mun_t = st.selectbox("2. Municipio:", list(ESTRUCTURA_GEOGRAFICA[región_t].keys()), key="mun_t")
+    sector_t = st.selectbox("3. Urbanización / Sector específico:", ESTRUCTURA_GEOGRAFICA[región_t][mun_t], key="sec_t")
+    tipo_t = st.selectbox("4. Tipo de Inmueble a Tasar:", TIPOS_INMUEBLES, key="tipo_t")
 
     with st.form("form_tasacion_ia_optimizado"):
         
@@ -455,17 +448,47 @@ with tab_ia:
         if not whatsapp_t:
             st.error("Por favor ingresa tu número de WhatsApp para enviarte el reporte detallado.")
         else:
-            if tipo_t == "Terreno":
-                base_m2_terr = 50.0
-                if "Margarita" in región_t:
-                    base_m2_terr = 60.0 if ("Pampatar" in localidad_t or "Costa Azul" in localidad_t) else 45.0
-                elif "Caracas" in región_t:
-                    base_m2_terr = 180.0 if ("Mercedes" in localidad_t or "Altamira" in localidad_t) else 110.0
-                elif "Miranda" in región_t:
-                    base_m2_terr = 40.0
-                elif "La Guaira" in región_t:
-                    base_m2_terr = 55.0
+            # ALGORITMO DE VALORACIÓN GEOGRÁFICA AJUSTADA POR SECTOR
+            base_m2_terr = 40.0
+            base_m2_const = 500.0
 
+            if "Margarita" in región_t:
+                if mun_t == "Municipio Maneiro":
+                    base_m2_terr = 70.0 if sector_t in ["Costa Azul", "Playa El Ángel", "Pampatar (Casco Histórico)"] else 55.0
+                    base_m2_const = 850.0
+                elif mun_t == "Municipio Antolín del Campo":
+                    base_m2_terr = 65.0 if sector_t in ["Playa El Agua", "Playa Parguito", "Manzanillo"] else 45.0
+                    base_m2_const = 650.0
+                elif mun_t == "Municipio Mariño":
+                    base_m2_terr = 50.0
+                    base_m2_const = 550.0
+                elif mun_t == "Municipio Arismendi":
+                    base_m2_terr = 50.0 if sector_t in ["Guacuco / Playa Guacuco", "La Asunción Centro"] else 35.0
+                    base_m2_const = 600.0
+                elif mun_t == "Municipio Díaz" and sector_t == "El Yaque":
+                    base_m2_terr = 80.0
+                    base_m2_const = 900.0
+                else:
+                    base_m2_terr = 35.0
+                    base_m2_const = 450.0
+
+            elif "Caracas" in región_t:
+                if mun_t in ["Municipio Chacao", "Municipio Baruta", "Municipio El Hatillo"]:
+                    base_m2_terr = 180.0 if sector_t in ["Las Mercedes", "Altamira", "La Castellana", "La Lagunita"] else 120.0
+                    base_m2_const = 1100.0
+                else:
+                    base_m2_terr = 70.0
+                    base_m2_const = 600.0
+
+            elif "Miranda" in región_t:
+                base_m2_terr = 45.0
+                base_m2_const = 450.0
+
+            elif "La Guaira" in región_t:
+                base_m2_terr = 60.0 if sector_t in ["Caraballeda (Playa Grande / Caribe)", "Los Corales"] else 40.0
+                base_m2_const = 600.0
+
+            if tipo_t == "Terreno":
                 factor_t = 1.0
                 if "Muro perimetral" in tipo_cerca: factor_t += 0.15
                 elif "Pared de bloques" in tipo_cerca: factor_t += 0.10
@@ -499,6 +522,7 @@ with tab_ia:
                 st.success(f"💰 **{tipo_resultado}:** ${valor_estimado:,.2f} USD")
                 st.info(
                     f"📊 **Desglose Técnico de Tasación:**\n\n"
+                    f"- **Ubicación:** {mun_t} - {sector_t}\n"
                     f"- **Área Total:** {area_m2_terreno} m²\n"
                     f"- **Precio Estimado por m²:** ${precio_m2_final} / m²\n"
                     f"- **Factor de Ajuste (Servicios y Plusvalía):** +{round((factor_t - 1.0)*100, 1)}%"
@@ -515,7 +539,7 @@ with tab_ia:
                 msg_tasacion = (
                     f"Hola, solicito informe formal de tasación de Terreno por IA:%0A"
                     f"*Solicitante:* {nombre_t} ({whatsapp_t})%0A"
-                    f"*Terreno:* {región_t} - {localidad_t}%0A"
+                    f"*Ubicación Exacta:* {región_t} - {mun_t} ({sector_t})%0A"
                     f"*Área:* {area_m2_terreno} m² (%20${precio_m2_final}/m²)%0A"
                     f"*Cerramiento:* {tipo_cerca}%0A"
                     f"*Topografía:* {topografia}%0A"
@@ -524,13 +548,6 @@ with tab_ia:
                 )
 
             else:
-                if "Margarita" in región_t or "Caracas" in región_t:
-                    base_m2_const = 750
-                    base_m2_terr = 60
-                else:
-                    base_m2_const = 450
-                    base_m2_terr = 30
-                
                 factor = 1.0
                 if "Excelente" in estado_conservacion: factor += 0.15
                 elif "A reparar" in estado_conservacion: factor -= 0.20
@@ -557,7 +574,7 @@ with tab_ia:
                 msg_tasacion = (
                     f"Hola, solicito el informe formal de tasación por IA:%0A"
                     f"*Solicitante:* {nombre_t} ({whatsapp_t})%0A"
-                    f"*Propiedad:* {tipo_t} en {región_t} - {localidad_t}%0A"
+                    f"*Propiedad:* {tipo_t} en {región_t} - {mun_t} ({sector_t})%0A"
                     f"*Área Techada:* {m2_construccion_t} m² | *Terreno:* {m2_terreno_t} m²%0A"
                     f"*Resultado {tipo_resultado}:* ${valor_estimado:,.2f} USD"
                 )
