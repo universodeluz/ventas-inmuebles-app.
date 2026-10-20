@@ -158,7 +158,7 @@ tab_comprador, tab_vendedor, tab_ia, tab_inventario = st.tabs([
 ])
 
 # =========================================================
-# PESTAÑA 1: COMPRADORES (UBICACIÓN EN CASCADA)
+# PESTAÑA 1: COMPRADORES
 # =========================================================
 with tab_comprador:
     st.subheader("Búsqueda Avanzada de Inmuebles")
@@ -239,7 +239,7 @@ with tab_comprador:
             )
 
 # =========================================================
-# PESTAÑA 2: VENDEDORES / ALIADOS (CONEXIÓN Y REGISTRO EN CASCADA)
+# PESTAÑA 2: VENDEDORES / ALIADOS (CON GOOGLE MAPS INTEGRAD0)
 # =========================================================
 with tab_vendedor:
     st.subheader("Publica o Registra tu Inmueble")
@@ -270,7 +270,7 @@ with tab_vendedor:
             tiene_planta = st.checkbox("Planta eléctrica / Transformador cerca")
             tiene_pozo = st.checkbox("Pozo de agua dulce")
         with col_s2:
-            tiene_vista = st.checkbox("Vista privilegiada (Mar / Ávila / Montaña)")
+            tiene_vista = st.checkbox("Vista privileged (Mar / Ávila / Montaña)")
             tiene_internet = st.checkbox("Internet de alta velocidad (Fibra/ABA)")
             
         st.markdown("### 📁 Estatus Legal")
@@ -329,11 +329,6 @@ with tab_vendedor:
 
             st.success("✨ ¡Inmueble procesado, fotos en la nube y sincronizado en Google Sheets!")
             
-            # Generación automática de enlace gratuito de Google Maps
-            query_mapa = f"{sector_v}, {mun_v}, {región_v}, Venezuela"
-            url_gmaps = f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(query_mapa)}"
-            st.link_button("📍 Ver Zona del Inmueble en Google Maps", url_gmaps, use_container_width=True)
-
             servicios_lista = []
             if tiene_piscina: servicios_lista.append("Piscina")
             if tiene_planta: servicios_lista.append("Planta/Transformador")
@@ -348,6 +343,10 @@ with tab_vendedor:
             else:
                 enlaces_fotos_str = "Sin fotos subidas"
 
+            # Enlace dinámico de Google Maps para el vendedor
+            direccion_mapa_v = f"{sector_v}, {mun_v}, {región_v}, Venezuela"
+            link_google_maps_v = f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(direccion_mapa_v)}"
+
             msg_prop = (
                 f"Hola, nuevo inmueble registrado:%0A"
                 f"*Propiedad:* {titulo_corto}%0A"
@@ -359,20 +358,25 @@ with tab_vendedor:
                 f"*Condición:* {estado_amoblado}%0A"
                 f"*Servicios/Extras:* {', '.join(servicios_lista) if servicios_lista else 'Ninguno'}%0A"
                 f"*Legal:* {estatus_legal}%0A"
-                f"*Ubicación Maps:* {url_gmaps}%0A"
                 f"*Fotos en la Nube ({len(urls_fotos)}):*%0A{enlaces_fotos_str}%0A"
                 f"*Contacto:* {nombre_v} ({telefono_v})"
             )
             link_wa_v = f"https://wa.me/{MI_NUMERO_WA}?text={msg_prop}"
             
-            estilo_btn_v = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;"
+            estilo_btn_v = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;margin-bottom:10px;"
+            estilo_btn_mapa = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#4285F4;text-align:center;text-decoration:none;border-radius:8px;"
+            
             st.markdown(
                 f'<a href="{link_wa_v}" target="_blank" style="{estilo_btn_v}">📱 Toca aquí para Enviar Notificación con Fotos a WhatsApp</a>',
                 unsafe_allow_html=True
             )
+            st.markdown(
+                f'<a href="{link_google_maps_v}" target="_blank" style="{estilo_btn_mapa}">📍 Ver Sector Publicado en Google Maps</a>',
+                unsafe_allow_html=True
+            )
 
 # =========================================================
-# PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA (CON VALORACIÓN POR SECTOR)
+# PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA
 # =========================================================
 with tab_ia:
     st.subheader("🤖 Asistente de Tasación Técnica por IA")
@@ -465,7 +469,7 @@ with tab_ia:
                     base_m2_terr = 70.0 if sector_t in ["Costa Azul", "Playa El Ángel", "Pampatar (Casco Histórico)"] else 55.0
                     base_m2_const = 850.0
                 elif mun_t == "Municipio Antolín del Campo":
-                    base_m2_terr = 65.0 if sector_t in ["Playa El Agua", "Playa Parguito", "Manzanillo", "La Mira"] else 45.0
+                    base_m2_terr = 65.0 if sector_t in ["Playa El Agua", "Playa Parguito", "Manzanillo"] else 45.0
                     base_m2_const = 650.0
                 elif mun_t == "Municipio Mariño":
                     base_m2_terr = 50.0
@@ -587,23 +591,32 @@ with tab_ia:
                     f"*Resultado {tipo_resultado}:* ${valor_estimado:,.2f} USD"
                 )
 
+            # Enlace dinámico de Google Maps para Tasación
+            direccion_mapa_t = f"{sector_t}, {mun_t}, {región_t}, Venezuela"
+            link_google_maps_t = f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(direccion_mapa_t)}"
+
             link_wa_t = f"https://wa.me/{MI_NUMERO_WA}?text={msg_tasacion}"
             
-            estilo_btn_t = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;"
+            estilo_btn_t = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;margin-bottom:10px;"
+            estilo_btn_mapa = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#4285F4;text-align:center;text-decoration:none;border-radius:8px;"
+            
             st.markdown(
                 f'<a href="{link_wa_t}" target="_blank" style="{estilo_btn_t}">📱 Recibir Informe Detallado en WhatsApp</a>',
                 unsafe_allow_html=True
             )
+            st.markdown(
+                f'<a href="{link_google_maps_t}" target="_blank" style="{estilo_btn_mapa}">📍 Ver Sector en Google Maps</a>',
+                unsafe_allow_html=True
+            )
 
 # =========================================================
-# PESTAÑA 4: INVENTARIO GOOGLE SHEETS (PROTEGIDO CON CONTRASEÑA DE ADMIN)
+# PESTAÑA 4: INVENTARIO GOOGLE SHEETS (PROTEGIDO CON CONTRASEÑA)
 # =========================================================
 with tab_inventario:
     st.subheader("📂 Inventario General Conectado a Google Sheets")
     st.markdown("Área restringida exclusiva para la administración del portal.")
     
-    # Contraseña de administrador
-    CLAVE_ADMIN = st.secrets.get("ADMIN_PASSWORD", "tu_clave_secreta_2026")
+    CLAVE_ADMIN = "tu_clave_secreta_2026"
     
     password_ingresada = st.text_input("Introduce la clave de Administrador para acceder:", type="password", key="pass_admin_inv")
     
