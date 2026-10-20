@@ -6,6 +6,7 @@ from PIL import Image
 import io
 import requests
 import json
+import urllib.parse
 
 # Soporte para formatos de imagen móvil (HEIC de iPhone/Android)
 try:
@@ -235,7 +236,8 @@ with tab_comprador:
             st.markdown(
                 f'<a href="{link_wa}" target="_blank" style="{estilo_btn}">📱 Enviar Requerimiento a WhatsApp</a>',
                 unsafe_allow_html=True
-)
+            )
+
 # =========================================================
 # PESTAÑA 2: VENDEDORES / ALIADOS (CONEXIÓN Y REGISTRO EN CASCADA)
 # =========================================================
@@ -327,6 +329,11 @@ with tab_vendedor:
 
             st.success("✨ ¡Inmueble procesado, fotos en la nube y sincronizado en Google Sheets!")
             
+            # Generación automática de enlace gratuito de Google Maps
+            query_mapa = f"{sector_v}, {mun_v}, {región_v}, Venezuela"
+            url_gmaps = f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(query_mapa)}"
+            st.link_button("📍 Ver Zona del Inmueble en Google Maps", url_gmaps, use_container_width=True)
+
             servicios_lista = []
             if tiene_piscina: servicios_lista.append("Piscina")
             if tiene_planta: servicios_lista.append("Planta/Transformador")
@@ -352,6 +359,7 @@ with tab_vendedor:
                 f"*Condición:* {estado_amoblado}%0A"
                 f"*Servicios/Extras:* {', '.join(servicios_lista) if servicios_lista else 'Ninguno'}%0A"
                 f"*Legal:* {estatus_legal}%0A"
+                f"*Ubicación Maps:* {url_gmaps}%0A"
                 f"*Fotos en la Nube ({len(urls_fotos)}):*%0A{enlaces_fotos_str}%0A"
                 f"*Contacto:* {nombre_v} ({telefono_v})"
             )
@@ -457,7 +465,7 @@ with tab_ia:
                     base_m2_terr = 70.0 if sector_t in ["Costa Azul", "Playa El Ángel", "Pampatar (Casco Histórico)"] else 55.0
                     base_m2_const = 850.0
                 elif mun_t == "Municipio Antolín del Campo":
-                    base_m2_terr = 65.0 if sector_t in ["Playa El Agua", "Playa Parguito", "Manzanillo"] else 45.0
+                    base_m2_terr = 65.0 if sector_t in ["Playa El Agua", "Playa Parguito", "Manzanillo", "La Mira"] else 45.0
                     base_m2_const = 650.0
                 elif mun_t == "Municipio Mariño":
                     base_m2_terr = 50.0
@@ -594,10 +602,9 @@ with tab_inventario:
     st.subheader("📂 Inventario General Conectado a Google Sheets")
     st.markdown("Área restringida exclusiva para la administración del portal.")
     
-    # Definición de tu clave de administrador (puedes cambiarla aquí)
-    CLAVE_ADMIN = "tu_clave_secreta_2026"  # <--- Cambia esto por tu contraseña segura
+    # Contraseña de administrador
+    CLAVE_ADMIN = st.secrets.get("ADMIN_PASSWORD", "tu_clave_secreta_2026")
     
-    # Campo para introducir la clave en la pestaña
     password_ingresada = st.text_input("Introduce la clave de Administrador para acceder:", type="password", key="pass_admin_inv")
     
     if password_ingresada == CLAVE_ADMIN:
@@ -616,4 +623,3 @@ with tab_inventario:
         st.error("❌ Clave incorrecta. Acceso denegado.")
     else:
         st.warning("🔒 Por favor introduce la contraseña de administrador para visualizar el inventario y los accesos.")
-
