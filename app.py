@@ -149,7 +149,7 @@ TIPOS_INMUEBLES = [
     "Terreno", "Apartamento", "Casa", "Townhouse", "Posada / Hotel", "Local Comercial", "Oficina"
 ]
 
-# CREACIÓN DE PESTAÑAS (Tasación IA en Pestaña 3 e Inventario en Pestaña 4)
+# CREACIÓN DE PESTAÑAS
 tab_comprador, tab_vendedor, tab_ia, tab_inventario = st.tabs([
     "🔍 Buscar Inmueble", 
     "📝 Publicar Inmueble",
@@ -232,14 +232,10 @@ with tab_comprador:
             )
             link_wa = f"https://wa.me/{MI_NUMERO_WA}?text={msg_wa}"
             
-            estilo_btn = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;"
-            st.markdown(
-                f'<a href="{link_wa}" target="_blank" style="{estilo_btn}">📱 Enviar Requerimiento a WhatsApp</a>',
-                unsafe_allow_html=True
-            )
+            st.link_button("📱 Enviar Requerimiento a WhatsApp", link_wa, use_container_width=True)
 
 # =========================================================
-# PESTAÑA 2: VENDEDORES / ALIADOS (CON GOOGLE MAPS INTEGRAD0)
+# PESTAÑA 2: VENDEDORES / ALIADOS (CON GOOGLE MAPS)
 # =========================================================
 with tab_vendedor:
     st.subheader("Publica o Registra tu Inmueble")
@@ -247,6 +243,11 @@ with tab_vendedor:
     región_v = st.selectbox("1. Estado o Región:", list(ESTRUCTURA_GEOGRAFICA.keys()), key="reg_v")
     mun_v = st.selectbox("2. Municipio:", list(ESTRUCTURA_GEOGRAFICA[región_v].keys()), key="mun_v")
     sector_v = st.selectbox("3. Urbanización / Sector específico:", ESTRUCTURA_GEOGRAFICA[región_v][mun_v], key="sec_v")
+
+    # Botón directo para verificar la ubicación seleccionada antes de publicar
+    dir_mapa_previa = f"{sector_v}, {mun_v}, {región_v}, Venezuela"
+    url_mapa_previa = f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(dir_mapa_previa)}"
+    st.link_button(f"📍 Explorar {sector_v} en Google Maps", url_mapa_previa, use_container_width=True)
 
     with st.form("form_vendedor_detalles"):
         titulo_v = st.text_input("Título comercial corto (ej: Terreno en La Mira / Quinta en Las Mercedes):")
@@ -270,7 +271,7 @@ with tab_vendedor:
             tiene_planta = st.checkbox("Planta eléctrica / Transformador cerca")
             tiene_pozo = st.checkbox("Pozo de agua dulce")
         with col_s2:
-            tiene_vista = st.checkbox("Vista privileged (Mar / Ávila / Montaña)")
+            tiene_vista = st.checkbox("Vista privilegiada (Mar / Ávila / Montaña)")
             tiene_internet = st.checkbox("Internet de alta velocidad (Fibra/ABA)")
             
         st.markdown("### 📁 Estatus Legal")
@@ -343,10 +344,6 @@ with tab_vendedor:
             else:
                 enlaces_fotos_str = "Sin fotos subidas"
 
-            # Enlace dinámico de Google Maps para el vendedor
-            direccion_mapa_v = f"{sector_v}, {mun_v}, {región_v}, Venezuela"
-            link_google_maps_v = f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(direccion_mapa_v)}"
-
             msg_prop = (
                 f"Hola, nuevo inmueble registrado:%0A"
                 f"*Propiedad:* {titulo_corto}%0A"
@@ -363,17 +360,8 @@ with tab_vendedor:
             )
             link_wa_v = f"https://wa.me/{MI_NUMERO_WA}?text={msg_prop}"
             
-            estilo_btn_v = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;margin-bottom:10px;"
-            estilo_btn_mapa = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#4285F4;text-align:center;text-decoration:none;border-radius:8px;"
-            
-            st.markdown(
-                f'<a href="{link_wa_v}" target="_blank" style="{estilo_btn_v}">📱 Toca aquí para Enviar Notificación con Fotos a WhatsApp</a>',
-                unsafe_allow_html=True
-            )
-            st.markdown(
-                f'<a href="{link_google_maps_v}" target="_blank" style="{estilo_btn_mapa}">📍 Ver Sector Publicado en Google Maps</a>',
-                unsafe_allow_html=True
-            )
+            st.link_button("📱 Toca aquí para Enviar Notificación con Fotos a WhatsApp", link_wa_v, use_container_width=True)
+            st.link_button(f"📍 Ver {sector_v} en Google Maps", url_mapa_previa, use_container_width=True)
 
 # =========================================================
 # PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA
@@ -385,6 +373,12 @@ with tab_ia:
     región_t = st.selectbox("1. Estado o Región:", list(ESTRUCTURA_GEOGRAFICA.keys()), key="reg_t")
     mun_t = st.selectbox("2. Municipio:", list(ESTRUCTURA_GEOGRAFICA[región_t].keys()), key="mun_t")
     sector_t = st.selectbox("3. Urbanización / Sector específico:", ESTRUCTURA_GEOGRAFICA[región_t][mun_t], key="sec_t")
+    
+    # Botón directo de ubicación en mapas para la zona a tasar
+    dir_mapa_t = f"{sector_t}, {mun_t}, {región_t}, Venezuela"
+    url_mapa_t = f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(dir_mapa_t)}"
+    st.link_button(f"📍 Abrir Ubicación del Sector ({sector_t}) en Google Maps", url_mapa_t, use_container_width=True)
+    
     tipo_t = st.selectbox("4. Tipo de Inmueble a Tasar:", TIPOS_INMUEBLES, key="tipo_t")
 
     with st.form("form_tasacion_ia_optimizado"):
@@ -591,23 +585,10 @@ with tab_ia:
                     f"*Resultado {tipo_resultado}:* ${valor_estimado:,.2f} USD"
                 )
 
-            # Enlace dinámico de Google Maps para Tasación
-            direccion_mapa_t = f"{sector_t}, {mun_t}, {región_t}, Venezuela"
-            link_google_maps_t = f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(direccion_mapa_t)}"
-
             link_wa_t = f"https://wa.me/{MI_NUMERO_WA}?text={msg_tasacion}"
             
-            estilo_btn_t = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#25D366;text-align:center;text-decoration:none;border-radius:8px;margin-bottom:10px;"
-            estilo_btn_mapa = "display:inline-block;padding:12px 20px;font-size:15px;font-weight:bold;color:white;background-color:#4285F4;text-align:center;text-decoration:none;border-radius:8px;"
-            
-            st.markdown(
-                f'<a href="{link_wa_t}" target="_blank" style="{estilo_btn_t}">📱 Recibir Informe Detallado en WhatsApp</a>',
-                unsafe_allow_html=True
-            )
-            st.markdown(
-                f'<a href="{link_google_maps_t}" target="_blank" style="{estilo_btn_mapa}">📍 Ver Sector en Google Maps</a>',
-                unsafe_allow_html=True
-            )
+            st.link_button("📱 Recibir Informe Detallado en WhatsApp", link_wa_t, use_container_width=True)
+            st.link_button(f"📍 Ver {sector_t} en Google Maps", url_mapa_t, use_container_width=True)
 
 # =========================================================
 # PESTAÑA 4: INVENTARIO GOOGLE SHEETS (PROTEGIDO CON CONTRASEÑA)
