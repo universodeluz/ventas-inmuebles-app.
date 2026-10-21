@@ -7,6 +7,7 @@ import io
 import requests
 import json
 import urllib.parse
+from datetime import datetime
 
 # Soporte para formatos de imagen móvil (HEIC de iPhone/Android)
 try:
@@ -55,8 +56,8 @@ df_inmuebles = cargar_inventario(SHEET_CSV_URL)
 
 # --- CONFIGURACIÓN DE CONTACTOS Y GRUPOS ---
 MI_NUMERO_WA = "584124792652" 
-LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
-LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
+LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/TU_ENLACE_MARGARITA_AQUI"
+LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/TU_ENLACE_CARACAS_AQUI"
 
 # --- BANNER SUPERIOR DE GRUPOS DE WHATSAPP ---
 st.info("💬 **¿Quieres unirte a nuestras comunidades activas en WhatsApp?**")
@@ -150,11 +151,12 @@ TIPOS_INMUEBLES = [
 ]
 
 # CREACIÓN DE PESTAÑAS
-tab_comprador, tab_vendedor, tab_ia, tab_inventario = st.tabs([
+tab_comprador, tab_vendedor, tab_ia, tab_inventario, tab_contratos = st.tabs([
     "🔍 Buscar Inmueble", 
     "📝 Publicar Inmueble",
     "🤖 Tasación IA",
-    "📂 Inventario Google Sheets"
+    "📂 Inventario Google Sheets",
+    "📄 Generador de Contrato"
 ])
 
 # =========================================================
@@ -244,7 +246,6 @@ with tab_vendedor:
     mun_v = st.selectbox("2. Municipio:", list(ESTRUCTURA_GEOGRAFICA[región_v].keys()), key="mun_v")
     sector_v = st.selectbox("3. Urbanización / Sector específico:", ESTRUCTURA_GEOGRAFICA[región_v][mun_v], key="sec_v")
 
-    # Botón directo para verificar la ubicación seleccionada antes de publicar
     dir_mapa_previa = f"{sector_v}, {mun_v}, {región_v}, Venezuela"
     url_mapa_previa = f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(dir_mapa_previa)}"
     st.link_button(f"📍 Explorar {sector_v} en Google Maps", url_mapa_previa, use_container_width=True)
@@ -374,7 +375,6 @@ with tab_ia:
     mun_t = st.selectbox("2. Municipio:", list(ESTRUCTURA_GEOGRAFICA[región_t].keys()), key="mun_t")
     sector_t = st.selectbox("3. Urbanización / Sector específico:", ESTRUCTURA_GEOGRAFICA[región_t][mun_t], key="sec_t")
     
-    # Botón directo de ubicación en mapas para la zona a tasar
     dir_mapa_t = f"{sector_t}, {mun_t}, {región_t}, Venezuela"
     url_mapa_t = f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(dir_mapa_t)}"
     st.link_button(f"📍 Abrir Ubicación del Sector ({sector_t}) en Google Maps", url_mapa_t, use_container_width=True)
@@ -454,7 +454,6 @@ with tab_ia:
         if not whatsapp_t:
             st.error("Por favor ingresa tu número de WhatsApp para enviarte el reporte detallado.")
         else:
-            # ALGORITMO DE VALORACIÓN GEOGRÁFICA AJUSTADA POR SECTOR
             base_m2_terr = 40.0
             base_m2_const = 500.0
 
@@ -617,3 +616,177 @@ with tab_inventario:
         st.error("❌ Clave incorrecta. Acceso denegado.")
     else:
         st.warning("🔒 Por favor introduce la contraseña de administrador para visualizar el inventario y los accesos.")
+
+# =========================================================
+# PESTAÑA 5: GENERADOR DE CONTRATOS CON DESCARGA DIRECTA Y ENVÍO POR WHATSAPP
+# =========================================================
+with tab_contratos:
+    st.subheader("📄 Generador de Borrador de Contrato Legal Venezolano")
+    st.markdown("Redacción jurídica adaptada a las leyes venezolanas con descarga en Word/Texto y envío directo por WhatsApp.")
+
+    tipo_contrato = st.selectbox(
+        "Selecciona el Tipo de Instrumento:",
+        ["Contrato de Arrendamiento (Alquiler)", "Opción a Compra-Venta de Inmueble"]
+    )
+
+    with st.form("form_generador_contratos_vzla"):
+        st.markdown("### 👤 PARTE A (Propietario / Arrendador / Vendedor)")
+        col_pa1, col_pa2 = st.columns(2)
+        with col_pa1:
+            nombre_p1 = st.text_input("Nombre Completo / Razón Social:", "Juan Carlos Pérez")
+            ci_p1 = st.text_input("Cédula / RIF:", "V-12.345.678")
+        with col_pa2:
+            estado_civil_p1 = st.selectbox("Estado Civil:", ["Soltero(a)", "Casado(a)", "Divorciado(a)", "Viudo(a)"])
+            domicilio_p1 = st.text_input("Domicilio legal:", "Porlamar, Municipio Mariño, Estado Nueva Esparta")
+
+        st.markdown("### 👤 PARTE B (Inquilino / Arrendatario / Comprador)")
+        col_pb1, col_pb2 = st.columns(2)
+        with col_pb1:
+            nombre_p2 = st.text_input("Nombre Completo / Razón Social B:", "Comercializadora Caribe C.A.")
+            ci_p2 = st.text_input("Cédula / RIF B:", "J-40123456-7")
+        with col_pb2:
+            estado_civil_p2 = st.selectbox("Estado Civil B:", ["N/A (Persona Jurídica)", "Soltero(a)", "Casado(a)", "Divorciado(a)"])
+            domicilio_p2 = st.text_input("Domicilio legal B:", "Caracas, Distrito Capital")
+
+        st.markdown("### 🏠 DATOS DEL INMUEBLE Y CONDICIONES ESPECÍFICAS")
+        región_cnt = st.selectbox("Estado o Región:", list(ESTRUCTURA_GEOGRAFICA.keys()), key="reg_cnt")
+        mun_cnt = st.selectbox("Municipio:", list(ESTRUCTURA_GEOGRAFICA[región_cnt].keys()), key="mun_cnt")
+        sector_cnt = st.selectbox("Urbanización / Sector:", ESTRUCTURA_GEOGRAFICA[región_cnt][mun_cnt], key="sec_cnt")
+        
+        tipo_inm_cnt = st.selectbox("Tipo de Inmueble:", TIPOS_INMUEBLES, key="tipo_cnt")
+        detalles_inm_cnt = st.text_area("Linderos, Ficha Catastral y Datos del Registro Público:", "Inmueble constante de 120m², según documento inscrito bajo el N° 45, Tomo 12 del Registro Público...")
+
+        col_m1, col_m2 = st.columns(2)
+        with col_m1:
+            monto_negocio = st.number_input("Monto en USD ($):", min_value=1, value=600, step=50)
+            monto_reserva = st.number_input("Depósito / Garantía / Arras en USD ($):", min_value=0, value=1200, step=100)
+        with col_m2:
+            plazo_dias = st.number_input("Duración del Contrato (Meses para alquiler / Días para venta):", min_value=1, value=12)
+            lugar_firma = st.text_input("Ciudad de Firma:", "Porlamar")
+
+        btn_generar_doc = st.form_submit_button("📄 Generar Documento Legal Adaptado", use_container_width=True)
+
+    if btn_generar_doc:
+        fecha_hoy = datetime.now().strftime("%d de %B de %Y")
+        
+        if tipo_contrato == "Contrato de Arrendamiento (Alquiler)":
+            if tipo_inm_cnt in ["Local Comercial", "Oficina", "Posada / Hotel"]:
+                marco_ley = "Decreto con Rango, Valor y Fuerza de Ley de Regulación del Arrendamiento Inmobiliario para el Uso Comercial (Decreto N° 929 de la Gaceta Oficial N° 40.418)."
+                clausula_uso = f"PRIMERA (USO COMERCIAL Y DESTINO): EL ARRENDADOR cede el uso del inmueble tipo {tipo_inm_cnt} para el desarrollo exclusivo de actividades comerciales lícitas de la firma arrendataria."
+                clausula_garantia = f"CUARTA (GARANTÍAS Y DEPÓSITO): Conforme al Artículo 19 del Decreto N° 929, EL ARRENDATARIO entrega la suma de {monto_reserva:,.2f} USD en calidad de depósito en garantía para responder por el estado de conservación del inmueble."
+                clausula_prorroga = f"QUINTA (PRÓRROGA LEGAL OBLIGATORIA): Cumplido el plazo de {plazo_dias} meses, se aplicará la Prórroga Legal Obligatoria contemplada en el Artículo 38 del Decreto N° 929, en base a la antigüedad de la relación arrendataria."
+            
+            else:
+                marco_ley = "Ley para la Regularización y Control de los Arrendamientos de Vivienda (Gaceta Oficial N° 6.053 Extraordinario) y el Código Civil Venezolano."
+                clausula_uso = f"PRIMERA (USO RESIDENCIAL EXCLUSIVO): EL ARRENDADOR cede el inmueble tipo {tipo_inm_cnt} destinado única y exclusivamente a la vivienda principal y habitación del ARRENDATARIO y su núcleo familiar."
+                clausula_garantia = f"CUARTA (DEPÓSITO Y CONSERVACIÓN): EL ARRENDATARIO entrega la cantidad de {monto_reserva:,.2f} USD como depósito de garantía para responder por daños o servicios pendientes al momento de la devolución."
+                clausula_prorroga = "QUINTA (PRÓRROGA LEGAL DE VIVIENDA): Vencido el contrato, las partes podrán acordar su renovación o acogerse a la prórroga legal estipulada en la ley de vivienda vigente."
+
+            if tipo_inm_cnt in ["Apartamento", "Oficina"]:
+                clausula_condominio = "\nSEXTA (PROPIEDAD HORIZONTAL): El inmueble forma parte de un edificio regido por la Ley de Propiedad Horizontal. EL ARRENDATARIO se compromete a respetar el Reglamento del Condominio y abonar las cuotas de mantenimiento."
+            else:
+                clausula_condominio = ""
+
+            borrador_texto = f"""================================================================================
+          CONTRATO DE ARRENDAMIENTO INMOBILIARIO ({tipo_inm_cnt.upper()})
+================================================================================
+
+Entre EL ARRENDADOR: {nombre_p1}, titular de la Cédula/RIF N° {ci_p1}, de estado civil 
+{estado_civil_p1}, domiciliado(a) en {domicilio_p1}; y por la otra parte EL ARRENDATARIO: 
+{nombre_p2}, titular de la Cédula/RIF N° {ci_p2}, de estado civil {estado_civil_p2}, 
+domiciliado(a) en {domicilio_p2}, se acuerda celebrar el presente Contrato de Arrendamiento 
+regido expresamente por la siguiente legislación venezolana: {marco_ley}
+
+{clausula_uso}
+
+SEGUNDA (UBICACIÓN Y FICHA): Ubicado en {sector_cnt}, {mun_cnt}, {región_cnt}.
+Identificación legal: {detalles_inm_cnt}.
+
+TERCERA (CANON Y MONEDA DE PAGO): El canon mensual es de {monto_negocio:,.2f} DÓLARES 
+DE LOS ESTADOS UNIDOS DE AMÉRICA ($ USD), pagaderos por mes anticipado. En cumplimiento del 
+Convenio Cambiario N° 1 del Banco Central de Venezuela (BCV), la obligación podrá ser cancelada 
+en Bolívares (VES) a la tasa oficial de cambio BCV vigente a la fecha del pago efectivo.
+
+{clausula_garantia}
+
+{clausula_prorroga}{clausula_condominio}
+
+Se otorgan dos (2) ejemplares de un mismo tenor en {lugar_firma}, el {fecha_hoy}.
+
+
+__________________________________            __________________________________
+            EL ARRENDADOR                                 EL ARRENDATARIO
+     {nombre_p1}                                   {nombre_p2}
+     C.I. / RIF: {ci_p1}                           C.I. / RIF: {ci_p2}
+================================================================================
+"""
+
+        else:
+            borrador_texto = f"""================================================================================
+             CONTRATO DE OPCIÓN A COMPRA-VENTA DE INMUEBLE
+================================================================================
+
+Entre EL VENDEDOR: {nombre_p1}, titular de la Cédula/RIF N° {ci_p1}, de estado civil 
+{estado_civil_p1}, domiciliado(a) en {domicilio_p1}; y EL COMPRADOR: {nombre_p2}, titular 
+de la Cédula/RIF N° {ci_p2}, de estado civil {estado_civil_p2}, domiciliado(a) en {domicilio_p2}, 
+se conviene el presente Contrato de Opción a Compra-Venta bajo los preceptos del Código Civil Venezolano:
+
+PRIMERA (EL INMUEBLE): EL VENDEDOR declara ser propietario exclusivo del inmueble tipo 
+{tipo_inm_cnt}, ubicado en {sector_cnt}, {mun_cnt}, {región_cnt}. 
+Identificación del registro: {detalles_inm_cnt}.
+
+SEGUNDA (PRECIO): El precio total pactado es la suma de {monto_negocio:,.2f} DÓLARES DE LOS ESTADOS 
+UNIDOS DE AMÉRICA ($ USD), liquidados en divisa o en Bolívares (VES) según la tasa oficial del 
+Banco Central de Venezuela (BCV) del día del pago (Convenio Cambiario N° 1).
+
+TERCERA (ARRAS PENITENCIALES): EL COMPRADOR entrega la suma de {monto_reserva:,.2f} USD por concepto 
+de arras penitenciales (Art. 1.263 del Código Civil). Si el negocio no se protocoliza por causa de 
+EL COMPRADOR, este perderá dicha señal. Si es por causa imputable a EL VENDEDOR, restituirá el doble.
+
+CUARTA (PLAZO): Se fija un plazo de {plazo_dias} días continuos para el otorgamiento del documento 
+definitivo ante la Oficina del Registro Público correspondiente.
+
+Se firma en la ciudad de {lugar_firma}, a los {fecha_hoy}.
+
+
+__________________________________            __________________________________
+     EL VENDEDOR / PROPIETARIO                     EL COMPRADOR / OPTANTE
+     {nombre_p1}                                   {nombre_p2}
+     C.I. / RIF: {ci_p1}                           C.I. / RIF: {ci_p2}
+================================================================================
+"""
+
+        st.success("✨ ¡Borrador legal redactado con éxito ajustado al tipo de inmueble y la legislación venezolana!")
+        st.text_area("📄 Texto Completo para Copiar / Editar:", borrador_texto, height=350)
+
+        # OPCIONES DE DESCARGA DIRECTA Y ENVÍO POR WHATSAPP
+        st.markdown("### 📥 Descarga del Documento y Notificación")
+        
+        col_down1, col_down2 = st.columns(2)
+        
+        with col_down1:
+            # BOTÓN DE DESCARGA DIRECTA EN EL DISPOSITIVO DEL USUARIO
+            nombre_archivo = f"Contrato_{tipo_inm_cnt}_{lugar_firma}.txt"
+            st.download_button(
+                label="💾 Descargar Contrato Editable (.txt / Word)",
+                data=borrador_texto,
+                file_name=nombre_archivo,
+                mime="text/plain",
+                use_container_width=True
+            )
+
+        with col_down2:
+            # NOTIFICACIÓN RESUMIDA PARA ENVIAR POR WHATSAPP AL CLIENTE
+            msg_contrato_wa = (
+                f"Hola, adjunto el resumen legal del borrador de contrato generado:%0A"
+                f"*Tipo:* {tipo_contrato}%0A"
+                f"*Inmueble:* {tipo_inm_cnt} en {sector_cnt}, {mun_cnt}%0A"
+                f"*Parte A:* {nombre_p1} ({ci_p1})%0A"
+                f"*Parte B:* {nombre_p2} ({ci_p2})%0A"
+                f"*Monto Pactado:* ${monto_negocio:,.2f} USD%0A"
+                f"*Garantía/Arras:* ${monto_reserva:,.2f} USD%0A"
+                f"*Duración/Plazo:* {plazo_dias}%0A%0A"
+                f"_Se adjunta el archivo de borrador legal completo para revisión de las partes._"
+            )
+            link_wa_contrato = f"https://wa.me/{MI_NUMERO_WA}?text={msg_contrato_wa}"
+            st.link_button("📱 Notificar y Enviar por WhatsApp", link_wa_contrato, use_container_width=True)
