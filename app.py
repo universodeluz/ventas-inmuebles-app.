@@ -365,7 +365,7 @@ with tab_vendedor:
             st.link_button(f"📍 Ver {sector_v} en Google Maps", url_mapa_previa, use_container_width=True)
 
 # =========================================================
-# PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA (CON CÁLCULO DINÁMICO DE PISCINA POR VOLUMEN)
+# PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA (CON CAMPOS VISIBLES DE PISCINA)
 # =========================================================
 with tab_ia:
     st.subheader("🤖 Asistente de Tasación Técnica por IA")
@@ -381,7 +381,7 @@ with tab_ia:
     
     tipo_t = st.selectbox("4. Tipo de Inmueble a Tasar:", TIPOS_INMUEBLES, key="tipo_t")
 
-    with st.form("form_tasacion_ia_avanzado_dinamico"):
+    with st.form("form_tasacion_ia_avanzado_visible"):
         
         if tipo_t == "Terreno":
             st.markdown("### 📐 Criterios de Valoración para Terrenos")
@@ -449,12 +449,14 @@ with tab_ia:
                 ["Sin piscina", "Piscina Operativa Completa", "Piscina en Estructura / Obra Gris (Vaso de concreto sin equipos/enchape)"]
             )
             
-            if piscina_estatus != "Sin piscina":
-                dim_largo = st.number_input("Largo de la Piscina (Metros):", min_value=1.0, value=8.0, step=0.5)
-                dim_ancho = st.number_input("Ancho de la Piscina (Metros):", min_value=1.0, value=4.0, step=0.5)
-                dim_profundidad = st.number_input("Profundidad Promedio (Metros):", min_value=0.5, value=1.5, step=0.1)
-            else:
-                dim_largo, dim_ancho, dim_profundidad = 0.0, 0.0, 0.0
+            # CAMPOS DE DIMENSIONES VISIBLES SIEMPRE QUE NO ESTÉ EN "Sin piscina"
+            col_p1, col_p2, col_p3 = st.columns(3)
+            with col_p1:
+                dim_largo = st.number_input("Largo (m):", min_value=0.0, value=8.0 if piscina_estatus != "Sin piscina" else 0.0, step=0.5)
+            with col_p2:
+                dim_ancho = st.number_input("Ancho (m):", min_value=0.0, value=4.0 if piscina_estatus != "Sin piscina" else 0.0, step=0.5)
+            with col_p3:
+                dim_profundidad = st.number_input("Profundidad (m):", min_value=0.0, value=1.5 if piscina_estatus != "Sin piscina" else 0.0, step=0.1)
 
             st.markdown("### 🧱 Cercado Perimetral del Inmueble")
             tipo_cerca = st.selectbox(
@@ -541,7 +543,7 @@ with tab_ia:
                 valor_piscina_usd = 0.0
                 dimensiones_piscina = "N/A"
                 
-                if piscina_estatus != "Sin piscina":
+                if piscina_estatus != "Sin piscina" and dim_largo > 0 and dim_ancho > 0 and dim_profundidad > 0:
                     volumen_m3 = dim_largo * dim_ancho * dim_profundidad
                     volumen_litros = int(volumen_m3 * 1000)
                     dimensiones_piscina = f"{dim_largo}m x {dim_ancho}m x {dim_profundidad}m (Volumen: {volumen_litros:,} Lts)"
