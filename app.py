@@ -56,8 +56,8 @@ df_inmuebles = cargar_inventario(SHEET_CSV_URL)
 
 # --- CONFIGURACIÓN DE CONTACTOS Y GRUPOS ---
 MI_NUMERO_WA = "584124792652" 
-LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
-LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
+LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/TU_ENLACE_MARGARITA_AQUI"
+LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/TU_ENLACE_CARACAS_AQUI"
 
 # --- BANNER SUPERIOR DE GRUPOS DE WHATSAPP ---
 st.info("💬 **¿Quieres unirte a nuestras comunidades activas en WhatsApp?**")
@@ -156,7 +156,7 @@ tab_comprador, tab_vendedor, tab_ia, tab_inventario, tab_contratos = st.tabs([
     "📝 Publicar Inmueble",
     "🤖 Tasación IA",
     "📂 Inventario Google Sheets",
-    "📄 Generador de Contrato"
+    "📄 Generador Legal (Arrendamiento / Compraventa)"
 ])
 
 # =========================================================
@@ -618,157 +618,200 @@ with tab_inventario:
         st.warning("🔒 Por favor introduce la contraseña de administrador para visualizar el inventario y los accesos.")
 
 # =========================================================
-# PESTAÑA 5: GENERADOR DE CONTRATOS CON DESCARGA DIRECTA Y ENVÍO POR WHATSAPP
+# PESTAÑA 5: GENERADOR LEGAL COMPLETO (ARRENDAMIENTO Y COMPRAVENTA SAREN)
 # =========================================================
 with tab_contratos:
-    st.subheader("📄 Generador de Borrador de Contrato Legal Venezolano")
-    st.markdown("Redacción jurídica adaptada a las leyes venezolanas con descarga en Word/Texto y envío directo por WhatsApp.")
+    st.subheader("📄 Generador de Borrador de Instrumento Legal")
+    st.markdown("Selecciona el tipo de documento. Redacción adaptada a las normas legales venezolanas vigentes y exigencias del SAREN.")
 
     tipo_contrato = st.selectbox(
-        "Selecciona el Tipo de Instrumento:",
-        ["Contrato de Arrendamiento (Alquiler)", "Opción a Compra-Venta de Inmueble"]
+        "Selecciona el Tipo de Instrumento Legal:",
+        ["Contrato de Arrendamiento (Alquiler)", "Documento Definitivo de Compraventa (Para Registro Inmobiliario)", "Opción a Compra-Venta"]
     )
 
-    with st.form("form_generador_contratos_vzla"):
+    with st.form("form_generador_contratos_vzla_completo"):
+        st.markdown("### ⚖️ DATOS DEL ABOGADO REDACTOR / VISANTE")
+        col_abg1, col_abg2 = st.columns(2)
+        with col_abg1:
+            nombre_abogado = st.text_input("Nombre Completo del Abogado Redactor:", "Dr. Carlos Eduardo Mendoza")
+        with col_abg2:
+            ipsa_abogado = st.text_input("N° de Registro IPSA:", "248.910")
+
         st.markdown("### 👤 PARTE A (Propietario / Arrendador / Vendedor)")
         col_pa1, col_pa2 = st.columns(2)
         with col_pa1:
             nombre_p1 = st.text_input("Nombre Completo / Razón Social:", "Juan Carlos Pérez")
-            ci_p1 = st.text_input("Cédula / RIF:", "V-12.345.678")
+            ci_p1 = st.text_input("Cédula de Identidad / RIF:", "V-12.345.678")
+            email_p1 = st.text_input("Correo Electrónico de Notificaciones:", "juancarlos.perez@gmail.com")
         with col_pa2:
             estado_civil_p1 = st.selectbox("Estado Civil:", ["Soltero(a)", "Casado(a)", "Divorciado(a)", "Viudo(a)"])
-            domicilio_p1 = st.text_input("Domicilio legal:", "Porlamar, Municipio Mariño, Estado Nueva Esparta")
+            domicilio_p1 = st.text_input("Domicilio Legal Completo:", "Porlamar, Municipio Mariño, Estado Nueva Esparta")
+            tel_p1 = st.text_input("Teléfono Móvil de Notificaciones:", "0412-1234567")
 
         st.markdown("### 👤 PARTE B (Inquilino / Arrendatario / Comprador)")
         col_pb1, col_pb2 = st.columns(2)
         with col_pb1:
-            nombre_p2 = st.text_input("Nombre Completo / Razón Social B:", "Comercializadora Caribe C.A.")
-            ci_p2 = st.text_input("Cédula / RIF B:", "J-40123456-7")
+            nombre_p2 = st.text_input("Nombre Completo B:", "María Alejandra Gómez")
+            ci_p2 = st.text_input("Cédula / RIF B:", "V-18.765.432")
+            email_p2 = st.text_input("Correo Electrónico B:", "mariao.gomez@gmail.com")
         with col_pb2:
-            estado_civil_p2 = st.selectbox("Estado Civil B:", ["N/A (Persona Jurídica)", "Soltero(a)", "Casado(a)", "Divorciado(a)"])
-            domicilio_p2 = st.text_input("Domicilio legal B:", "Caracas, Distrito Capital")
+            estado_civil_p2 = st.selectbox("Estado Civil B:", ["Soltero(a)", "Casado(a)", "Divorciado(a)", "Viudo(a)"])
+            domicilio_p2 = st.text_input("Domicilio Legal B:", "Caracas, Distrito Capital")
+            tel_p2 = st.text_input("Teléfono Móvil B:", "0414-9876543")
 
-        st.markdown("### 🏠 DATOS DEL INMUEBLE Y CONDICIONES ESPECÍFICAS")
+        st.markdown("### 🏠 IDENTIFICACIÓN Y REGISTRO DEL INMUEBLE")
         región_cnt = st.selectbox("Estado o Región:", list(ESTRUCTURA_GEOGRAFICA.keys()), key="reg_cnt")
         mun_cnt = st.selectbox("Municipio:", list(ESTRUCTURA_GEOGRAFICA[región_cnt].keys()), key="mun_cnt")
         sector_cnt = st.selectbox("Urbanización / Sector:", ESTRUCTURA_GEOGRAFICA[región_cnt][mun_cnt], key="sec_cnt")
         
         tipo_inm_cnt = st.selectbox("Tipo de Inmueble:", TIPOS_INMUEBLES, key="tipo_cnt")
-        detalles_inm_cnt = st.text_area("Linderos, Ficha Catastral y Datos del Registro Público:", "Inmueble constante de 120m², según documento inscrito bajo el N° 45, Tomo 12 del Registro Público...")
+        detalles_inm_cnt = st.text_area("Linderos completos, Metros2, Ficha Catastral:", "Un inmueble tipo apartamento constante de 120m² de construcción. Linderos: Norte: Apto 4-C; Sur: Área común; Este: Fachada Este; Oeste: Pasillo. Ficha Catastral N° 4010128.")
 
+        st.markdown("#### 📜 Datos del Título de Propiedad Anterior (Para Compraventa SAREN)")
+        col_reg1, col_reg2 = st.columns(2)
+        with col_reg1:
+            registro_origen = st.text_input("Oficina de Registro Inmobiliario:", "Registro Inmobiliario del Municipio Mariño")
+            doc_numero = st.text_input("N° de Documento / Asunto:", "45")
+            doc_tomo = st.text_input("Tomo:", "12")
+        with col_reg2:
+            doc_protocolo = st.text_input("Protocolo / Matrícula:", "Primero (1°)")
+            doc_fecha = st.text_input("Fecha del Título Anterior:", "15/03/2018")
+            alicuota_condominio = st.text_input("Alícuota % (si es Apartamento/Oficina):", "2.15%")
+
+        if tipo_contrato == "Contrato de Arrendamiento (Alquiler)":
+            st.markdown("### 🔑 CONDICIONES ESPECÍFICAS DE ALQUILER")
+            col_oper1, col_oper2 = st.columns(2)
+            with col_oper1:
+                juegos_llaves = st.number_input("Juegos de Llaves Entregados:", min_value=1, value=2)
+                max_ocupantes = st.number_input("Ocupación Máxima (Personas):", min_value=1, value=4)
+            with col_oper2:
+                permite_mascotas = st.radio("Mascotas en el Inmueble:", ["Prohibidas expresamente", "Permitidas previo acuerdo por escrito"])
+                obras_inquilino = st.radio("Mejoras / Obras por el Inquilino:", ["Prohibidas sin consentimiento por escrito", "Permitidas en beneficio del inmueble"])
+
+        st.markdown("### 💰 CONDICIONES FINANCIERAS Y PAGO")
         col_m1, col_m2 = st.columns(2)
         with col_m1:
-            monto_negocio = st.number_input("Monto en USD ($):", min_value=1, value=600, step=50)
-            monto_reserva = st.number_input("Depósito / Garantía / Arras en USD ($):", min_value=0, value=1200, step=100)
+            monto_negocio = st.number_input("Monto en USD ($):", min_value=1, value=45000 if "Compraventa" in tipo_contrato else 500, step=500)
+            monto_garantia = st.number_input("Garantía / Depósito / Arras ($ USD):", min_value=0, value=1500, step=100)
+            dia_pago = st.number_input("Día límite de pago cada mes (Si es alquiler):", min_value=1, max_value=28, value=5)
         with col_m2:
-            plazo_dias = st.number_input("Duración del Contrato (Meses para alquiler / Días para venta):", min_value=1, value=12)
-            lugar_firma = st.text_input("Ciudad de Firma:", "Porlamar")
+            duracion_meses = st.number_input("Plazo del Contrato (Meses para Alquiler / Días para Venta):", min_value=1, value=12 if "Arrendamiento" in tipo_contrato else 60)
+            pagador_servicios = st.selectbox("Servicios y Condominio:", ["A cargo exclusivo del Arrendatario", "Servicios Arrendatario / Condominio Arrendador", "Incluidos en el canon"])
+            lugar_firma = st.text_input("Ciudad de Firma / Registro:", "Porlamar")
+
+        st.markdown("#### 🏦 Datos de Pago (Tasa BCV y Transferencia/Pago Móvil)")
+        col_banc1, col_banc2 = st.columns(2)
+        with col_banc1:
+            banco_titular = st.text_input("Titular de la Cuenta:", "Juan Carlos Pérez")
+            banco_nombre = st.text_input("Banco y N° Cuenta / Pago Móvil / Ref:", "Banesco N° 0134-XXXX-XXXX-XXXX / Ref: 987654")
+        with col_banc2:
+            banco_rif = st.text_input("Cédula / RIF del Titular:", "V-12345678")
 
         btn_generar_doc = st.form_submit_button("📄 Generar Documento Legal Adaptado", use_container_width=True)
 
     if btn_generar_doc:
         fecha_hoy = datetime.now().strftime("%d de %B de %Y")
         
-        if tipo_contrato == "Contrato de Arrendamiento (Alquiler)":
-            if tipo_inm_cnt in ["Local Comercial", "Oficina", "Posada / Hotel"]:
-                marco_ley = "Decreto con Rango, Valor y Fuerza de Ley de Regulación del Arrendamiento Inmobiliario para el Uso Comercial (Decreto N° 929 de la Gaceta Oficial N° 40.418)."
-                clausula_uso = f"PRIMERA (USO COMERCIAL Y DESTINO): EL ARRENDADOR cede el uso del inmueble tipo {tipo_inm_cnt} para el desarrollo exclusivo de actividades comerciales lícitas de la firma arrendataria."
-                clausula_garantia = f"CUARTA (GARANTÍAS Y DEPÓSITO): Conforme al Artículo 19 del Decreto N° 929, EL ARRENDATARIO entrega la suma de {monto_reserva:,.2f} USD en calidad de depósito en garantía para responder por el estado de conservación del inmueble."
-                clausula_prorroga = f"QUINTA (PRÓRROGA LEGAL OBLIGATORIA): Cumplido el plazo de {plazo_dias} meses, se aplicará la Prórroga Legal Obligatoria contemplada en el Artículo 38 del Decreto N° 929, en base a la antigüedad de la relación arrendataria."
-            
-            else:
-                marco_ley = "Ley para la Regularización y Control de los Arrendamientos de Vivienda (Gaceta Oficial N° 6.053 Extraordinario) y el Código Civil Venezolano."
-                clausula_uso = f"PRIMERA (USO RESIDENCIAL EXCLUSIVO): EL ARRENDADOR cede el inmueble tipo {tipo_inm_cnt} destinado única y exclusivamente a la vivienda principal y habitación del ARRENDATARIO y su núcleo familiar."
-                clausula_garantia = f"CUARTA (DEPÓSITO Y CONSERVACIÓN): EL ARRENDATARIO entrega la cantidad de {monto_reserva:,.2f} USD como depósito de garantía para responder por daños o servicios pendientes al momento de la devolución."
-                clausula_prorroga = "QUINTA (PRÓRROGA LEGAL DE VIVIENDA): Vencido el contrato, las partes podrán acordar su renovación o acogerse a la prórroga legal estipulada en la ley de vivienda vigente."
+        # MODELO 1: DOCUMENTO DEFINITIVO DE COMPRAVENTA (SAREN REGISTRO)
+        if "Compraventa" in tipo_contrato:
+            borrador_texto = f"""CIUDADANO:
+REGISTRADOR(A) INMOBILIARIO(A) DEL CIRCUITO DEL {mun_cnt.upper()}, {región_cnt.upper()}.
+SU DESPACHO.-
 
-            if tipo_inm_cnt in ["Apartamento", "Oficina"]:
-                clausula_condominio = "\nSEXTA (PROPIEDAD HORIZONTAL): El inmueble forma parte de un edificio regido por la Ley de Propiedad Horizontal. EL ARRENDATARIO se compromete a respetar el Reglamento del Condominio y abonar las cuotas de mantenimiento."
+Nosotros, {nombre_p1}, venezolano(a), mayor de edad, estado civil {estado_civil_p1}, titular de la Cédula de Identidad N° {ci_p1}, domiciliado(a) en {domicilio_p1}, por una parte, y quien en lo sucesivo se denominará EL VENDEDOR; y por la otra parte, {nombre_p2}, venezolano(a), mayor de edad, estado civil {estado_civil_p2}, titular de la Cédula de Identidad N° {ci_p2}, domiciliado(a) en {domicilio_p2}, quien en lo sucesivo se denominará EL COMPRADOR, hemos convenido en celebrar el presente Contrato de Compraventa, contenido en las cláusulas siguientes:
+
+PRIMERA (DEL INMUEBLE): Declara EL VENDEDOR que es único e exclusivo propietario de un inmueble tipo {tipo_inm_cnt}, ubicado en: {sector_cnt}, {mun_cnt}, {región_cnt}. 
+Características, Linderos y Ficha Catastral: {detalles_inm_cnt}. (Alícuota de Condominio: {alicuota_condominio}).
+
+SEGUNDA (TÍTULO DE ADQUISICIÓN): El inmueble antes descrito lo adquirió EL VENDEDOR según documento inscrito por ante la Oficina de {registro_origen}, bajo el N° {doc_numero}, Tomo {doc_tomo}, Protocolo {doc_protocolo}, en fecha {doc_fecha}.
+
+TERCERA (DE LA VENTA Y PRECIO): Declara EL VENDEDOR que por medio del presente instrumento da en Venta Pura y Simple, Perfecta e Irrevocable a EL COMPRADOR el inmueble antes identificado. El precio convenido por las partes para esta negociación es la cantidad de {monto_negocio:,.2f} DÓLARES DE LOS ESTADOS UNIDOS DE AMÉRICA ($ USD), cancelados en divisa pactada o en Bolívares (VES) ajustados a la tasa oficial de cambio del Banco Central de Venezuela (BCV) al día del pago efectivo (Convenio Cambiario N° 1). EL VENDEDOR declara tener recibida dicha suma a su entera satisfacción mediante la siguiente transacción bancaria: {banco_nombre}, a nombre de {banco_titular} (C.I./RIF: {banco_rif}).
+
+CUARTA (LIBRE DE GRAVAMEN Y SANEAMIENTO): Declara EL VENDEDOR que el inmueble se encuentra libre de toda hipoteca, embargo, prohibición de enajenar y gravar, pleito pendiente o gravamen, obligándose en todo caso al saneamiento de Ley conforme al Código Civil.
+
+QUINTA (SOLVENCIAS Y TAXAS): EL VENDEDOR entrega el inmueble totalmente solvente en el pago de impuestos municipales (Derecho de Frente y Aseo Urbano), servicios públicos domiciliarios y cuotas de condominio acumuladas a la fecha.
+
+SEXTA (DECLARACIÓN FISCAL / VIVIENDA PRINCIPAL): Las partes declaran a los fines fiscales y tributarios ante el SENIAT que la presente operación cumple con la normativa de Vivienda Principal o la consignación de la Planilla Forma 33 según corresponda.
+
+SÉPTIMA (GASTOS DE REGISTRO): Los gastos de registro, aranceles y tributos que cause la protocolización del presente documento serán asumidos por EL COMPRADOR.
+
+Se hacen dos (2) ejemplares de un mismo tenor en la ciudad de {lugar_firma}, a los {fecha_hoy}.
+
+
+EL VENDEDOR ________________________        EL COMPRADOR ________________________
+{nombre_p1}                                 {nombre_p2}
+C.I.: {ci_p1}                               C.I.: {ci_p2}
+
+Documento redactado y visado por el Abogado {nombre_abogado}, inscrito en el IPSA bajo el N° {ipsa_abogado}.
+"""
+
+        # MODELO 2: CONTRATO DE ARRENDAMIENTO (NORMATIVA 2026)
+        elif "Arrendamiento" in tipo_contrato:
+            if tipo_inm_cnt in ["Local Comercial", "Oficina", "Posada / Hotel"]:
+                marco_ley = "Decreto con Rango, Valor y Fuerza de Ley de Regulación del Arrendamiento Inmobiliario para Uso Comercial (Decreto N° 929, G.O. N° 40.418)."
+                destino_uso = f"Uso comercial exclusivo de la firma arrendataria."
+                prorroga_clausula = f"QUINTA (PRÓRROGA LEGAL OBLIGATORIA): Cumplido el plazo de {duracion_meses} meses, aplicará la Prórroga Legal Obligatoria (Art. 38 del Decreto N° 929)."
             else:
-                clausula_condominio = ""
+                marco_ley = "Ley para la Regularización y Control de los Arrendamientos de Vivienda y las disposiciones del Código Civil."
+                destino_uso = f"Uso estrictamente residencial y habitación del ARRENDATARIO y su núcleo familiar (ocupación máxima: {max_ocupantes} personas)."
+                prorroga_clausula = f"QUINTA (DURACIÓN Y RENOVACIÓN): El contrato tendrá una vigencia de {duracion_meses} meses (a falta de pacto la ley prescribe un mínimo de 1 año)."
 
             borrador_texto = f"""================================================================================
           CONTRATO DE ARRENDAMIENTO INMOBILIARIO ({tipo_inm_cnt.upper()})
 ================================================================================
 
-Entre EL ARRENDADOR: {nombre_p1}, titular de la Cédula/RIF N° {ci_p1}, de estado civil 
-{estado_civil_p1}, domiciliado(a) en {domicilio_p1}; y por la otra parte EL ARRENDATARIO: 
-{nombre_p2}, titular de la Cédula/RIF N° {ci_p2}, de estado civil {estado_civil_p2}, 
-domiciliado(a) en {domicilio_p2}, se acuerda celebrar el presente Contrato de Arrendamiento 
-regido expresamente por la siguiente legislación venezolana: {marco_ley}
+En la ciudad de {lugar_firma}, a los {fecha_hoy}, entre los ciudadanos:
 
-{clausula_uso}
+POR UNA PARTE (EL ARRENDADOR): {nombre_p1} (C.I./RIF: {ci_p1}, Estado Civil: {estado_civil_p1}, Domicilio: {domicilio_p1}, Email: {email_p1}, Tel: {tel_p1})
+POR LA OTRA PARTE (EL ARRENDATARIO): {nombre_p2} (C.I./RIF: {ci_p2}, Estado Civil: {estado_civil_p2}, Domicilio: {domicilio_p2}, Email: {email_p2}, Tel: {tel_p2})
 
-SEGUNDA (UBICACIÓN Y FICHA): Ubicado en {sector_cnt}, {mun_cnt}, {región_cnt}.
-Identificación legal: {detalles_inm_cnt}.
+Acuerdan celebrar el presente Contrato de Arrendamiento regido por: {marco_ley}
 
-TERCERA (CANON Y MONEDA DE PAGO): El canon mensual es de {monto_negocio:,.2f} DÓLARES 
-DE LOS ESTADOS UNIDOS DE AMÉRICA ($ USD), pagaderos por mes anticipado. En cumplimiento del 
-Convenio Cambiario N° 1 del Banco Central de Venezuela (BCV), la obligación podrá ser cancelada 
-en Bolívares (VES) a la tasa oficial de cambio BCV vigente a la fecha del pago efectivo.
-
-{clausula_garantia}
-
-{clausula_prorroga}{clausula_condominio}
-
-Se otorgan dos (2) ejemplares de un mismo tenor en {lugar_firma}, el {fecha_hoy}.
-
+CLÁUSULAS:
+PRIMERA (OBJETO Y USO): EL ARRENDADOR cede en alquiler el inmueble tipo {tipo_inm_cnt}, ubicado en {sector_cnt}, {mun_cnt}, {región_cnt}. Dirección y catastro: {detalles_inm_cnt}. Destino: {destino_uso}
+SEGUNDA (DURACIÓN): El contrato tendrá una duración de {duracion_meses} meses continuos.
+TERCERA (CANON Y PAGO BCV): El canon mensual es de {monto_negocio:,.2f} DÓLARES ($ USD), pagaderos los primeros {dia_pago} días de cada mes en divisa o Bolívares (VES) a la tasa oficial del BCV. Pago a: {banco_nombre} - Titular: {banco_titular} (C.I./RIF: {banco_rif}).
+CUARTA (GARANTÍA): EL ARRENDATARIO entrega {monto_garantia:,.2f} USD (máximo 3 cánones) como depósito de garantía.
+{prorroga_clausula}
+SEXTA (SERVICIOS Y CONDOMINIO): Gastos de servicios y condominio: {pagador_servicios}.
+SÉPTIMA (LLAVES, MASCOTAS Y OBRAS): Llaves entregadas: {juegos_llaves} juegos. Mascotas: {permite_mascotas}. Obras: {obras_inquilino}.
+OCTAVA (TERMINACIÓN Y RESOLUCIÓN): El incumplimiento de tres (3) cánones consecutivos o servicios por 3 meses dará derecho a la resolución del contrato.
+NOVENA (NOTIFICACIONES Y JURISDICCIÓN): Notificaciones válidas por email/WhatsApp. Sometimiento a conciliación o Tribunales de Municipio de la jurisdicción.
 
 __________________________________            __________________________________
             EL ARRENDADOR                                 EL ARRENDATARIO
-     {nombre_p1}                                   {nombre_p2}
-     C.I. / RIF: {ci_p1}                           C.I. / RIF: {ci_p2}
-================================================================================
+     {nombre_p1} (C.I.: {ci_p1})                   {nombre_p2} (C.I.: {ci_p2})
 """
 
+        # MODELO 3: OPCIÓN A COMPRAVENTA
         else:
             borrador_texto = f"""================================================================================
              CONTRATO DE OPCIÓN A COMPRA-VENTA DE INMUEBLE
 ================================================================================
 
-Entre EL VENDEDOR: {nombre_p1}, titular de la Cédula/RIF N° {ci_p1}, de estado civil 
-{estado_civil_p1}, domiciliado(a) en {domicilio_p1}; y EL COMPRADOR: {nombre_p2}, titular 
-de la Cédula/RIF N° {ci_p2}, de estado civil {estado_civil_p2}, domiciliado(a) en {domicilio_p2}, 
-se conviene el presente Contrato de Opción a Compra-Venta bajo los preceptos del Código Civil Venezolano:
+En la ciudad de {lugar_firma}, a los {fecha_hoy}, entre EL VENDEDOR: {nombre_p1} (C.I.: {ci_p1}), y EL COMPRADOR: {nombre_p2} (C.I.: {ci_p2}), se conviene celebrar el presente Contrato de Opción a Compra-Venta bajo los preceptos del Código Civil Venezolano:
 
-PRIMERA (EL INMUEBLE): EL VENDEDOR declara ser propietario exclusivo del inmueble tipo 
-{tipo_inm_cnt}, ubicado en {sector_cnt}, {mun_cnt}, {región_cnt}. 
-Identificación del registro: {detalles_inm_cnt}.
-
-SEGUNDA (PRECIO): El precio total pactado es la suma de {monto_negocio:,.2f} DÓLARES DE LOS ESTADOS 
-UNIDOS DE AMÉRICA ($ USD), liquidados en divisa o en Bolívares (VES) según la tasa oficial del 
-Banco Central de Venezuela (BCV) del día del pago (Convenio Cambiario N° 1).
-
-TERCERA (ARRAS PENITENCIALES): EL COMPRADOR entrega la suma de {monto_reserva:,.2f} USD por concepto 
-de arras penitenciales (Art. 1.263 del Código Civil). Si el negocio no se protocoliza por causa de 
-EL COMPRADOR, este perderá dicha señal. Si es por causa imputable a EL VENDEDOR, restituirá el doble.
-
-CUARTA (PLAZO): Se fija un plazo de {plazo_dias} días continuos para el otorgamiento del documento 
-definitivo ante la Oficina del Registro Público correspondiente.
-
-Se firma en la ciudad de {lugar_firma}, a los {fecha_hoy}.
-
+PRIMERA (EL INMUEBLE): EL VENDEDOR es propietario del inmueble tipo {tipo_inm_cnt}, ubicado en {sector_cnt}, {mun_cnt}, {región_cnt}. Detalles registrales: {detalles_inm_cnt}. Título inscrito en {registro_origen}, bajo el N° {doc_numero}, Tomo {doc_tomo}.
+SEGUNDA (PRECIO Y MONEDA): El precio pactado es de {monto_negocio:,.2f} USD, pagaderos en divisa o Bolívares (VES) a tasa BCV (Convenio Cambiario N° 1).
+TERCERA (ARRAS PENITENCIALES): EL COMPRADOR entrega {monto_garantia:,.2f} USD en calidad de arras penitenciales (Art. 1.263 C.C.). Si la venta falla por culpa de EL COMPRADOR, perderá la señal. Si es por EL VENDEDOR, restituirá el doble.
+CUARTA (PLAZO): Se fijan {duracion_meses} días continuos para protocolizar el documento definitivo ante el Registro Inmobiliario.
 
 __________________________________            __________________________________
      EL VENDEDOR / PROPIETARIO                     EL COMPRADOR / OPTANTE
-     {nombre_p1}                                   {nombre_p2}
-     C.I. / RIF: {ci_p1}                           C.I. / RIF: {ci_p2}
-================================================================================
+     {nombre_p1} (C.I.: {ci_p1})                   {nombre_p2} (C.I.: {ci_p2})
 """
 
-        st.success("✨ ¡Borrador legal redactado con éxito ajustado al tipo de inmueble y la legislación venezolana!")
-        st.text_area("📄 Texto Completo para Copiar / Editar:", borrador_texto, height=350)
+        st.success("✨ ¡Documento redactado con éxito ajustado a las normas legales venezolanas!")
+        st.text_area("📄 Texto Completo para Copiar / Editar:", borrador_texto, height=400)
 
-        # OPCIONES DE DESCARGA DIRECTA Y ENVÍO POR WHATSAPP
+        # DESCARGA DIRECTA Y ENVÍO POR WHATSAPP
         st.markdown("### 📥 Descarga del Documento y Notificación")
-        
         col_down1, col_down2 = st.columns(2)
         
         with col_down1:
-            # BOTÓN DE DESCARGA DIRECTA EN EL DISPOSITIVO DEL USUARIO
-            nombre_archivo = f"Contrato_{tipo_inm_cnt}_{lugar_firma}.txt"
+            nombre_archivo = f"Documento_{tipo_inm_cnt}_{lugar_firma}.txt"
             st.download_button(
-                label="💾 Descargar Contrato Editable (.txt / Word)",
+                label="💾 Descargar Documento Editable (.txt / Word)",
                 data=borrador_texto,
                 file_name=nombre_archivo,
                 mime="text/plain",
@@ -776,17 +819,15 @@ __________________________________            __________________________________
             )
 
         with col_down2:
-            # NOTIFICACIÓN RESUMIDA PARA ENVIAR POR WHATSAPP AL CLIENTE
             msg_contrato_wa = (
-                f"Hola, adjunto el resumen legal del borrador de contrato generado:%0A"
+                f"Hola, adjunto el resumen del borrador legal generado:%0A"
                 f"*Tipo:* {tipo_contrato}%0A"
                 f"*Inmueble:* {tipo_inm_cnt} en {sector_cnt}, {mun_cnt}%0A"
                 f"*Parte A:* {nombre_p1} ({ci_p1})%0A"
                 f"*Parte B:* {nombre_p2} ({ci_p2})%0A"
-                f"*Monto Pactado:* ${monto_negocio:,.2f} USD%0A"
-                f"*Garantía/Arras:* ${monto_reserva:,.2f} USD%0A"
-                f"*Duración/Plazo:* {plazo_dias}%0A%0A"
-                f"_Se adjunta el archivo de borrador legal completo para revisión de las partes._"
+                f"*Monto:* ${monto_negocio:,.2f} USD%0A"
+                f"*Abogado Visante:* {nombre_abogado} (IPSA: {ipsa_abogado})%0A%0A"
+                f"_Documento listo para revisión del Registro o Abogado de la firma._"
             )
             link_wa_contrato = f"https://wa.me/{MI_NUMERO_WA}?text={msg_contrato_wa}"
             st.link_button("📱 Notificar y Enviar por WhatsApp", link_wa_contrato, use_container_width=True)
