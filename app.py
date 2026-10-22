@@ -55,7 +55,7 @@ def cargar_inventario(url):
 df_inmuebles = cargar_inventario(SHEET_CSV_URL)
 
 # --- CONFIGURACIÓN DE CONTACTOS Y GRUPOS ---
-MI_NUMERO_WA = "584124792652" 
+MI_NUMERO_WA = "584124792652" 8
 LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
 LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
 
@@ -365,11 +365,11 @@ with tab_vendedor:
             st.link_button(f"📍 Ver {sector_v} en Google Maps", url_mapa_previa, use_container_width=True)
 
 # =========================================================
-# PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA
+# PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA (ACTUALIZADA OBRA GRIS / PISCINA)
 # =========================================================
 with tab_ia:
     st.subheader("🤖 Asistente de Tasación Técnica por IA")
-    st.markdown("Cálculo algorítmico adaptado al valor comercial por Municipio y Sector específico.")
+    st.markdown("Cálculo algorítmico adaptado para inmuebles terminados, en obra gris, estructuras inconclusas y extras especiales.")
     
     región_t = st.selectbox("1. Estado o Región:", list(ESTRUCTURA_GEOGRAFICA.keys()), key="reg_t")
     mun_t = st.selectbox("2. Municipio:", list(ESTRUCTURA_GEOGRAFICA[región_t].keys()), key="mun_t")
@@ -385,9 +385,7 @@ with tab_ia:
         
         if tipo_t == "Terreno":
             st.markdown("### 📐 Criterios de Valoración para Terrenos")
-            
             area_m2_terreno = st.number_input("Área Total de la Parcela (m²):", min_value=1.0, value=500.0, step=25.0)
-            
             tipo_cerca = st.selectbox(
                 "Tipo de Cerramiento / Lindero:",
                 [
@@ -398,22 +396,10 @@ with tab_ia:
                     "Sin cercar (Linderos abiertos) (0%)"
                 ]
             )
-            topografia = st.selectbox(
-                "Topografía y Nivel del Suelo:",
-                ["Plana (100% aprovechable) (+10%)", "Semi-plana / Colina suave (0%)", "Inclinada / Pendiente severa (-15%)"]
-            )
-            acceso_vial = st.selectbox(
-                "Acceso Vial y Entorno:",
-                ["Calle Asfaltada (+10%)", "Calle de Granzón / Consolidada (0%)", "Camino de Tierra / Rústico (-10%)"]
-            )
-            zonificacion = st.selectbox(
-                "Zonificación / Uso de Suelo:",
-                ["Comercial / Mixto (+15%)", "Residencial (R1/R2/R3) (+10%)", "Industrial / Galpón (+5%)", "Agrícola / Turístico (0%)"]
-            )
-            estatus_legal = st.selectbox(
-                "Estatus Legal:",
-                ["Título de Propiedad Registrado (+10%)", "Adjudicación / Carta Agrícola (0%)", "Documento Privado / En trámite (-15%)"]
-            )
+            topografia = st.selectbox("Topografía y Nivel del Suelo:", ["Plana (100% aprovechable) (+10%)", "Semi-plana / Colina suave (0%)", "Inclinada / Pendiente severa (-15%)"])
+            acceso_vial = st.selectbox("Acceso Vial y Entorno:", ["Calle Asfaltada (+10%)", "Calle de Granzón / Consolidada (0%)", "Camino de Tierra / Rústico (-10%)"])
+            zonificacion = st.selectbox("Zonificación / Uso de Suelo:", ["Comercial / Mixto (+15%)", "Residencial (R1/R2/R3) (+10%)", "Industrial / Galpón (+5%)", "Agrícola / Turístico (0%)"])
+            estatus_legal = st.selectbox("Estatus Legal:", ["Título de Propiedad Registrado (+10%)", "Adjudicación / Carta Agrícola (0%)", "Documento Privado / En trámite (-15%)"])
 
             st.markdown("#### 💡 Servicios Públicos y Plusvalía Directa")
             t_agua = st.checkbox("Red Pública de Agua de Calle (+5%)")
@@ -422,27 +408,55 @@ with tab_ia:
             t_cloacas = st.checkbox("Red de Aguas Servidas / Cloacas (+5%)")
             t_internet = st.checkbox("Fibra Óptica / Conectividad (+5%)")
             t_vista = st.checkbox("Vista al Mar / Panorámica a la Montaña (+15%)")
+            
+            estado_obra = "Terminado"
+            piscina_estatus = "Sin piscina"
 
         else:
-            st.markdown("### 🏠 Criterios para Inmuebles Construidos")
+            st.markdown("### 🏠 Criterios para Inmuebles Residenciales / Comerciales")
             transaccion_t = st.radio("Objetivo de Tasación:", ["Valor de Venta Comercial", "Canon de Alquiler Sugerido"])
             
-            m2_construccion_t = st.number_input("Área de Construcción (m² techados):", min_value=0, value=120)
+            # NUEVO: ESTADO DE LA CONSTRUCCIÓN (OBRA GRIS / INCONCLUSA)
+            estado_obra = st.selectbox(
+                "Estado de la Construcción:",
+                [
+                    "100% Terminado y Habitable (Listo para ocupar)",
+                    "Obra Gris Avanzada (Frisado, tuberías, techos listos - Faltan pisos, baños, cocina)",
+                    "Estructura Inconclusa / Obra Negra (Columnas, losas, paredes levantadas sin friso)"
+                ]
+            )
+
+            m2_construccion_t = st.number_input("Área de Construcción Techada (m²):", min_value=0, value=150)
             m2_terreno_t = st.number_input("Área de Terreno / Parcela (m² totales):", min_value=0, value=350)
             habitaciones_t = st.number_input("Habitaciones:", min_value=0, value=3, key="hab_t")
-            banos_t = st.number_input("Baños:", min_value=1, value=2, key="ban_t")
-            estado_amoblado_t = st.selectbox("Nivel de Equipamiento:", ["Amoblado y Equipado", "Semiamoblado", "Sin amoblar"])
-            antiguedad_t = st.selectbox("Antigüedad:", ["A estrenar / Nuevo", "Menos de 10 años", "Más de 10 años / A actualizar"])
-            estado_conservacion = st.selectbox(
-                "Estado de Conservación:",
-                ["Excelente / Modernizado", "Bueno / Habitable", "A reparar / Para actualizar"]
+            banos_t = st.number_input("Baños:", min_value=0, value=2, key="ban_t")
+            
+            if "Terminado" in estado_obra:
+                estado_amoblado_t = st.selectbox("Nivel de Equipamiento:", ["Amoblado y Equipado de Lujo", "Semiamoblado", "Sin amoblar / Solo cocina"])
+                estado_conservacion = st.selectbox("Estado de Conservación:", ["Excelente / Modernizado", "Bueno / Habitable", "A reparar menor"])
+            else:
+                estado_amoblado_t = "N/A (Obra Gris/Inconclusa)"
+                estado_conservacion = "N/A (En proceso constructivo)"
+
+            st.markdown("### 🏊‍♂️ Extras y Elementos de Alta Plusvalía")
+            piscina_estatus = st.selectbox(
+                "Estatus de la Piscina:",
+                [
+                    "Sin piscina",
+                    "Piscina Operativa Completa (Terminada con bomba, filtros y enchape)",
+                    "Piscina en Estructura / Obra Gris (Vaso de concreto construido, sin enchape ni equipos)"
+                ]
             )
             
-            st.markdown("**Factores Críticos de Plusvalía:**")
-            t_piscina = st.checkbox("Tiene Piscina", key="tp")
-            t_planta = st.checkbox("Tiene Planta Eléctrica", key="tpl")
-            t_pozo = st.checkbox("Tiene Pozo o Tanque constante", key="tpz")
-            t_vista = st.checkbox("Tiene Vista privilegiada (Mar/Ávila/Montaña)", key="tv")
+            col_plus1, col_plus2 = st.columns(2)
+            with col_plus1:
+                t_piscina = (piscina_estatus != "Sin piscina")
+                t_planta = st.checkbox("Planta Eléctrica o acometida lista")
+                t_pozo = st.checkbox("Pozo de Agua / Tanque subterráneo de gran capacidad")
+            with col_plus2:
+                t_vista = st.checkbox("Vista privilegiada (Mar / Ávila / Montaña)")
+                t_internet = st.checkbox("Internet / Fibra óptica disponible")
+                t_permisos = st.checkbox("Planos aprobados por Ingeniería Municipal / Alcaldía")
 
         st.markdown("---")
         nombre_t = st.text_input("Tu Nombre / Contacto:", key="nombre_t")
@@ -502,16 +516,11 @@ with tab_ia:
 
                 if "Plana" in topografia: factor_t += 0.10
                 elif "Inclinada" in topografia: factor_t -= 0.15
-
                 if "Asfaltada" in acceso_vial: factor_t += 0.10
                 elif "Tierra" in acceso_vial: factor_t -= 0.10
-
                 if "Comercial" in zonificacion: factor_t += 0.15
                 elif "Residencial" in zonificacion: factor_t += 0.10
-                elif "Industrial" in zonificacion: factor_t += 0.05
-
                 if "Título" in estatus_legal: factor_t += 0.10
-                elif "Documento Privado" in estatus_legal: factor_t -= 0.15
 
                 if t_agua: factor_t += 0.05
                 if t_pozo: factor_t += 0.10
@@ -533,38 +542,46 @@ with tab_ia:
                     f"- **Factor de Ajuste (Servicios y Plusvalía):** +{round((factor_t - 1.0)*100, 1)}%"
                 )
 
-                servicios_act = []
-                if t_agua: servicios_act.append("Agua Pública")
-                if t_pozo: servicios_act.append("Pozo Agua")
-                if t_luz: servicios_act.append("Electricidad")
-                if t_cloacas: servicios_act.append("Cloacas")
-                if t_internet: servicios_act.append("Fibra Óptica")
-                if t_vista: servicios_act.append("Vista Panorámica")
-
                 msg_tasacion = (
                     f"Hola, solicito informe formal de tasación de Terreno por IA:%0A"
                     f"*Solicitante:* {nombre_t} ({whatsapp_t})%0A"
                     f"*Ubicación Exacta:* {región_t} - {mun_t} ({sector_t})%0A"
                     f"*Área:* {area_m2_terreno} m² (%20${precio_m2_final}/m²)%0A"
-                    f"*Cerramiento:* {tipo_cerca}%0A"
-                    f"*Topografía:* {topografia}%0A"
-                    f"*Servicios:* {', '.join(servicios_act) if servicios_act else 'Ninguno'}%0A"
                     f"*Valor Comercial Estimado:* ${valor_estimado:,.2f} USD"
                 )
 
             else:
-                factor = 1.0
-                if "Excelente" in estado_conservacion: factor += 0.15
-                elif "A reparar" in estado_conservacion: factor -= 0.20
+                # AJUSTE TÉCNICO SEGÚN ESTADO DE LA CONSTRUCCIÓN (OBRA GRIS / INCONCLUSA)
+                factor_obra = 1.0
+                descuento_terminacion_txt = "Terminado 100%"
                 
-                if "Amoblado y Equipado" in estado_amoblado_t: factor += 0.10
-                if t_piscina: factor += 0.05
-                if t_planta: factor += 0.08
-                if t_pozo: factor += 0.05
+                if "Obra Gris Avanzada" in estado_obra:
+                    factor_obra = 0.70 # Descuento del 30% por costos de acabados faltantes
+                    descuento_terminacion_txt = "Obra Gris Avanzada (-30% por acabados)"
+                elif "Estructura Inconclusa" in estado_obra:
+                    factor_obra = 0.45 # Descuento del 55% por obra negra / estructura
+                    descuento_terminacion_txt = "Estructura Inconclusa / Obra Negra (-55%)"
+
+                factor = 1.0 * factor_obra
+                
+                if "Terminado" in estado_obra:
+                    if "Excelente" in estado_conservacion: factor += 0.15
+                    elif "A reparar" in estado_conservacion: factor -= 0.10
+                    if "Amoblado y Equipado" in estado_amoblado_t: factor += 0.10
+
+                # VALORACIÓN DE PISCINA SEGÚN ESTADO
+                if piscina_estatus == "Piscina Operativa Completa":
+                    factor += 0.10
+                elif piscina_estatus == "Piscina en Estructura / Obra Gris":
+                    factor += 0.04 # Aporta por el costo del vaso de concreto excavado
+
+                if t_planta: factor += 0.06
+                if t_pozo: factor += 0.08
                 if t_vista: factor += 0.07
+                if t_permisos: factor += 0.05
 
                 valor_construccion = m2_construccion_t * base_m2_const * factor
-                valor_terreno = m2_terreno_t * base_m2_terr * factor
+                valor_terreno = m2_terreno_t * base_m2_terr * 1.0
                 valor_total_venta = valor_construccion + valor_terreno
                 
                 if "Alquiler" in transaccion_t:
@@ -575,12 +592,20 @@ with tab_ia:
                     tipo_resultado = "Valor Comercial Estimado de Venta"
 
                 st.success(f"💰 **{tipo_resultado}:** ${valor_estimado:,.2f} USD")
+                st.info(
+                    f"📊 **Desglose Técnico de Tasación:**\n\n"
+                    f"- **Inmueble:** {tipo_t} en {mun_t} - {sector_t}\n"
+                    f"- **Condición de Obra:** {descuento_terminacion_txt}\n"
+                    f"- **Piscina:** {piscina_estatus}\n"
+                    f"- **Área Techada:** {m2_construccion_t} m² | **Terreno:** {m2_terreno_t} m²"
+                )
                 
                 msg_tasacion = (
                     f"Hola, solicito el informe formal de tasación por IA:%0A"
                     f"*Solicitante:* {nombre_t} ({whatsapp_t})%0A"
-                    f"*Propiedad:* {tipo_t} en {región_t} - {mun_t} ({sector_t})%0A"
+                    f"*Propiedad:* {tipo_t} ({estado_obra}) en {región_t} - {mun_t} ({sector_t})%0A"
                     f"*Área Techada:* {m2_construccion_t} m² | *Terreno:* {m2_terreno_t} m²%0A"
+                    f"*Piscina:* {piscina_estatus}%0A"
                     f"*Resultado {tipo_resultado}:* ${valor_estimado:,.2f} USD"
                 )
 
@@ -712,7 +737,6 @@ with tab_contratos:
     if btn_generar_doc:
         fecha_hoy = datetime.now().strftime("%d de %B de %Y")
         
-        # MODELO 1: DOCUMENTO DEFINITIVO DE COMPRAVENTA (SAREN REGISTRO)
         if "Compraventa" in tipo_contrato:
             borrador_texto = f"""CIUDADANO:
 REGISTRADOR(A) INMOBILIARIO(A) DEL CIRCUITO DEL {mun_cnt.upper()}, {región_cnt.upper()}.
@@ -745,7 +769,6 @@ C.I.: {ci_p1}                               C.I.: {ci_p2}
 Documento redactado y visado por el Abogado {nombre_abogado}, inscrito en el IPSA bajo el N° {ipsa_abogado}.
 """
 
-        # MODELO 2: CONTRATO DE ARRENDAMIENTO (NORMATIVA 2026)
         elif "Arrendamiento" in tipo_contrato:
             if tipo_inm_cnt in ["Local Comercial", "Oficina", "Posada / Hotel"]:
                 marco_ley = "Decreto con Rango, Valor y Fuerza de Ley de Regulación del Arrendamiento Inmobiliario para Uso Comercial (Decreto N° 929, G.O. N° 40.418)."
@@ -783,7 +806,6 @@ __________________________________            __________________________________
      {nombre_p1} (C.I.: {ci_p1})                   {nombre_p2} (C.I.: {ci_p2})
 """
 
-        # MODELO 3: OPCIÓN A COMPRAVENTA
         else:
             borrador_texto = f"""================================================================================
              CONTRATO DE OPCIÓN A COMPRA-VENTA DE INMUEBLE
@@ -804,7 +826,6 @@ __________________________________            __________________________________
         st.success("✨ ¡Documento redactado con éxito ajustado a las normas legales venezolanas!")
         st.text_area("📄 Texto Completo para Copiar / Editar:", borrador_texto, height=400)
 
-        # DESCARGA DIRECTA Y ENVÍO POR WHATSAPP
         st.markdown("### 📥 Descarga del Documento y Notificación")
         col_down1, col_down2 = st.columns(2)
         
