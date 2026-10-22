@@ -57,7 +57,7 @@ df_inmuebles = cargar_inventario(SHEET_CSV_URL)
 # --- CONFIGURACIÓN DE CONTACTOS Y GRUPOS ---
 MI_NUMERO_WA = "584124792652" 
 LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
-LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
+LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4
 
 # --- BANNER SUPERIOR DE GRUPOS DE WHATSAPP ---
 st.info("💬 **¿Quieres unirte a nuestras comunidades activas en WhatsApp?**")
@@ -365,11 +365,11 @@ with tab_vendedor:
             st.link_button(f"📍 Ver {sector_v} en Google Maps", url_mapa_previa, use_container_width=True)
 
 # =========================================================
-# PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA (CON PARÁMETROS AVANZADOS DE OBRA GRIS, PISCINA, CERCA Y TANQUE)
+# PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA (CON CÁLCULO DINÁMICO DE PISCINA POR VOLUMEN)
 # =========================================================
 with tab_ia:
     st.subheader("🤖 Asistente de Tasación Técnica por IA")
-    st.markdown("Cálculo algorítmico avanzado considerando porcentaje de obra, dimensiones de piscinas, cercados perimetrales y capacidad de tanques subterráneos.")
+    st.markdown("Cálculo algorítmico avanzado considerando porcentaje de obra, dimensiones volumétricas de piscinas, cercados perimetrales y capacidad de tanques subterráneos.")
     
     región_t = st.selectbox("1. Estado o Región:", list(ESTRUCTURA_GEOGRAFICA.keys()), key="reg_t")
     mun_t = st.selectbox("2. Municipio:", list(ESTRUCTURA_GEOGRAFICA[región_t].keys()), key="mun_t")
@@ -381,7 +381,7 @@ with tab_ia:
     
     tipo_t = st.selectbox("4. Tipo de Inmueble a Tasar:", TIPOS_INMUEBLES, key="tipo_t")
 
-    with st.form("form_tasacion_ia_avanzado"):
+    with st.form("form_tasacion_ia_avanzado_dinamico"):
         
         if tipo_t == "Terreno":
             st.markdown("### 📐 Criterios de Valoración para Terrenos")
@@ -417,7 +417,7 @@ with tab_ia:
             estado_obra = "Terminado 100%"
             porcentaje_obra = 100
             piscina_estatus = "Sin piscina"
-            dimensiones_piscina = "N/A"
+            dim_largo, dim_ancho, dim_profundidad = 0.0, 0.0, 0.0
 
         else:
             st.markdown("### 🏠 Criterios de Construcción y Ejecución")
@@ -443,7 +443,7 @@ with tab_ia:
             habitaciones_t = st.number_input("Habitaciones:", min_value=0, value=3, key="hab_t")
             banos_t = st.number_input("Baños:", min_value=0, value=2, key="ban_t")
             
-            st.markdown("### 🏊‍♂️ Dimensiones y Estatus de Piscina")
+            st.markdown("### 🏊‍♂️ Dimensiones y Estatus de Piscina (Cálculo por Volumen m³)")
             piscina_estatus = st.selectbox(
                 "Estatus de la Piscina:",
                 ["Sin piscina", "Piscina Operativa Completa", "Piscina en Estructura / Obra Gris (Vaso de concreto sin equipos/enchape)"]
@@ -453,9 +453,8 @@ with tab_ia:
                 dim_largo = st.number_input("Largo de la Piscina (Metros):", min_value=1.0, value=8.0, step=0.5)
                 dim_ancho = st.number_input("Ancho de la Piscina (Metros):", min_value=1.0, value=4.0, step=0.5)
                 dim_profundidad = st.number_input("Profundidad Promedio (Metros):", min_value=0.5, value=1.5, step=0.1)
-                dimensiones_piscina = f"{dim_largo}m x {dim_ancho}m x {dim_profundidad}m (Volumen aprox: {int(dim_largo*dim_ancho*dim_profundidad*1000)} Litros)"
             else:
-                dimensiones_piscina = "N/A"
+                dim_largo, dim_ancho, dim_profundidad = 0.0, 0.0, 0.0
 
             st.markdown("### 🧱 Cercado Perimetral del Inmueble")
             tipo_cerca = st.selectbox(
@@ -530,11 +529,6 @@ with tab_ia:
                 factor_tanque_inm = 0.08 if capacidad_tanque >= 15000 else (0.04 if capacidad_tanque >= 5000 else 0.01)
 
                 factor_extras = 1.0 + factor_cercado_inm + factor_tanque_inm
-                if piscina_estatus == "Piscina Operativa Completa":
-                    factor_extras += 0.12
-                elif piscina_estatus == "Piscina en Estructura / Obra Gris":
-                    factor_extras += 0.05
-
                 if t_pozo: factor_extras += 0.08
                 if t_planta: factor_extras += 0.06
                 if t_vista: factor_extras += 0.07
@@ -542,7 +536,22 @@ with tab_ia:
                 # Valor de construcción ponderado por el % de ejecución real
                 valor_construccion = m2_construccion_t * base_m2_const * factor_ejecucion * factor_extras
                 valor_terreno = m2_terreno_t * base_m2_terr * factor_extras
-                valor_total_venta = valor_construccion + valor_terreno
+                
+                # CÁLCULO DINÁMICO DE PISCINA POR VOLUMEN (M3 / LITROS)
+                valor_piscina_usd = 0.0
+                dimensiones_piscina = "N/A"
+                
+                if piscina_estatus != "Sin piscina":
+                    volumen_m3 = dim_largo * dim_ancho * dim_profundidad
+                    volumen_litros = int(volumen_m3 * 1000)
+                    dimensiones_piscina = f"{dim_largo}m x {dim_ancho}m x {dim_profundidad}m (Volumen: {volumen_litros:,} Lts)"
+                    
+                    if piscina_estatus == "Piscina Operativa Completa":
+                        valor_piscina_usd = volumen_m3 * 400.0 # Aprox $400 por m3 terminada con equipos
+                    elif piscina_estatus == "Piscina en Estructura / Obra Gris":
+                        valor_piscina_usd = volumen_m3 * 130.0 # Aprox $130 por m3 solo vaso de concreto
+
+                valor_total_venta = valor_construccion + valor_terreno + valor_piscina_usd
                 
                 if "Alquiler" in transaccion_t:
                     valor_estimado = round(valor_total_venta * 0.007, 2)
@@ -556,7 +565,7 @@ with tab_ia:
                     f"📊 **Desglose Técnico Avanzado:**\n\n"
                     f"- **Ejecución de Obra:** {porcentaje_obra}% ({estado_obra})\n"
                     f"- **Cercado Perimetral:** {porcentaje_cerca}% concluido\n"
-                    f"- **Piscina:** {piscina_estatus} [{dimensiones_piscina}]\n"
+                    f"- **Piscina:** {piscina_estatus} [{dimensiones_piscina}] -> Valor agregado: ${valor_piscina_usd:,.2f} USD\n"
                     f"- **Tanque Subterráneo:** {capacidad_tanque:,} Litros\n"
                     f"- **Área Techada:** {m2_construccion_t} m² | **Terreno:** {m2_terreno_t} m²"
                 )
