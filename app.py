@@ -56,8 +56,8 @@ df_inmuebles = cargar_inventario(SHEET_CSV_URL)
 
 # --- CONFIGURACIÓN DE CONTACTOS Y GRUPOS ---
 MI_NUMERO_WA = "584124792652" 
-LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/TU_ENLACE_MARGARITA_AQUI"
-LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/TU_ENLACE_CARACAS_AQUI"
+LINK_GRUPO_MARGARITA = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
+LINK_GRUPO_CARACAS = "https://chat.whatsapp.com/DR5lqu5ibyb7yO60BryXJf?s=cl&p=a&mlu=4&ilr=4"
 
 # --- BANNER SUPERIOR DE GRUPOS DE WHATSAPP ---
 st.info("💬 **¿Quieres unirte a nuestras comunidades activas en WhatsApp?**")
