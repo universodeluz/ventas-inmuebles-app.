@@ -365,11 +365,11 @@ with tab_vendedor:
             st.link_button(f"📍 Ver {sector_v} en Google Maps", url_mapa_previa, use_container_width=True)
 
 # =========================================================
-# PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA (ACTUALIZADA OBRA GRIS / PISCINA)
+# PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA (CON PARÁMETROS AVANZADOS DE OBRA GRIS, PISCINA, CERCA Y TANQUE)
 # =========================================================
 with tab_ia:
     st.subheader("🤖 Asistente de Tasación Técnica por IA")
-    st.markdown("Cálculo algorítmico adaptado para inmuebles terminados, en obra gris, estructuras inconclusas y extras especiales.")
+    st.markdown("Cálculo algorítmico avanzado considerando porcentaje de obra, dimensiones de piscinas, cercados perimetrales y capacidad de tanques subterráneos.")
     
     región_t = st.selectbox("1. Estado o Región:", list(ESTRUCTURA_GEOGRAFICA.keys()), key="reg_t")
     mun_t = st.selectbox("2. Municipio:", list(ESTRUCTURA_GEOGRAFICA[región_t].keys()), key="mun_t")
@@ -381,13 +381,15 @@ with tab_ia:
     
     tipo_t = st.selectbox("4. Tipo de Inmueble a Tasar:", TIPOS_INMUEBLES, key="tipo_t")
 
-    with st.form("form_tasacion_ia_optimizado"):
+    with st.form("form_tasacion_ia_avanzado"):
         
         if tipo_t == "Terreno":
             st.markdown("### 📐 Criterios de Valoración para Terrenos")
             area_m2_terreno = st.number_input("Área Total de la Parcela (m²):", min_value=1.0, value=500.0, step=25.0)
+            
+            st.markdown("#### 🧱 Cerramiento Perimetral del Terreno")
             tipo_cerca = st.selectbox(
-                "Tipo de Cerramiento / Lindero:",
+                "Tipo de Cerca / Muro:",
                 [
                     "Muro perimetral de concreto frisado (+15%)",
                     "Pared de bloques de concreto (+10%)",
@@ -396,34 +398,44 @@ with tab_ia:
                     "Sin cercar (Linderos abiertos) (0%)"
                 ]
             )
+            porcentaje_cerca = st.slider("Porcentaje de Conclusión de la Cerca/Muro (%):", min_value=0, max_value=100, value=100)
+
             topografia = st.selectbox("Topografía y Nivel del Suelo:", ["Plana (100% aprovechable) (+10%)", "Semi-plana / Colina suave (0%)", "Inclinada / Pendiente severa (-15%)"])
             acceso_vial = st.selectbox("Acceso Vial y Entorno:", ["Calle Asfaltada (+10%)", "Calle de Granzón / Consolidada (0%)", "Camino de Tierra / Rústico (-10%)"])
             zonificacion = st.selectbox("Zonificación / Uso de Suelo:", ["Comercial / Mixto (+15%)", "Residencial (R1/R2/R3) (+10%)", "Industrial / Galpón (+5%)", "Agrícola / Turístico (0%)"])
             estatus_legal = st.selectbox("Estatus Legal:", ["Título de Propiedad Registrado (+10%)", "Adjudicación / Carta Agrícola (0%)", "Documento Privado / En trámite (-15%)"])
 
-            st.markdown("#### 💡 Servicios Públicos y Plusvalía Directa")
+            st.markdown("#### 💡 Servicios y Autonomía Hídrica")
             t_agua = st.checkbox("Red Pública de Agua de Calle (+5%)")
             t_pozo = st.checkbox("Pozo Profundo de Agua Dulce (+10%)")
+            capacidad_tanque = st.number_input("Capacidad de Tanque Subterráneo (Litros):", min_value=0, value=0, step=1000)
             t_luz = st.checkbox("Electricidad / Transformador cerca (+5%)")
             t_cloacas = st.checkbox("Red de Aguas Servidas / Cloacas (+5%)")
             t_internet = st.checkbox("Fibra Óptica / Conectividad (+5%)")
             t_vista = st.checkbox("Vista al Mar / Panorámica a la Montaña (+15%)")
             
-            estado_obra = "Terminado"
+            estado_obra = "Terminado 100%"
+            porcentaje_obra = 100
             piscina_estatus = "Sin piscina"
+            dimensiones_piscina = "N/A"
 
         else:
-            st.markdown("### 🏠 Criterios para Inmuebles Residenciales / Comerciales")
+            st.markdown("### 🏠 Criterios de Construcción y Ejecución")
             transaccion_t = st.radio("Objetivo de Tasación:", ["Valor de Venta Comercial", "Canon de Alquiler Sugerido"])
             
-            # NUEVO: ESTADO DE LA CONSTRUCCIÓN (OBRA GRIS / INCONCLUSA)
             estado_obra = st.selectbox(
-                "Estado de la Construcción:",
+                "Estado General de la Edificación:",
                 [
-                    "100% Terminado y Habitable (Listo para ocupar)",
-                    "Obra Gris Avanzada (Frisado, tuberías, techos listos - Faltan pisos, baños, cocina)",
-                    "Estructura Inconclusa / Obra Negra (Columnas, losas, paredes levantadas sin friso)"
+                    "100% Terminado y Habitable",
+                    "Obra Gris Avanzada (Tuberías, techos y paredes listas, faltan acabados)",
+                    "Estructura Inconclusa / Obra Negra (Estructura de concreto sin friso)"
                 ]
+            )
+            
+            porcentaje_obra = st.slider(
+                "Porcentaje Exacto de Ejecución de la Obra (%):", 
+                min_value=10, max_value=100, 
+                value=100 if "100%" in estado_obra else (70 if "Gris" in estado_obra else 40)
             )
 
             m2_construccion_t = st.number_input("Área de Construcción Techada (m²):", min_value=0, value=150)
@@ -431,157 +443,105 @@ with tab_ia:
             habitaciones_t = st.number_input("Habitaciones:", min_value=0, value=3, key="hab_t")
             banos_t = st.number_input("Baños:", min_value=0, value=2, key="ban_t")
             
-            if "Terminado" in estado_obra:
-                estado_amoblado_t = st.selectbox("Nivel de Equipamiento:", ["Amoblado y Equipado de Lujo", "Semiamoblado", "Sin amoblar / Solo cocina"])
-                estado_conservacion = st.selectbox("Estado de Conservación:", ["Excelente / Modernizado", "Bueno / Habitable", "A reparar menor"])
-            else:
-                estado_amoblado_t = "N/A (Obra Gris/Inconclusa)"
-                estado_conservacion = "N/A (En proceso constructivo)"
-
-            st.markdown("### 🏊‍♂️ Extras y Elementos de Alta Plusvalía")
+            st.markdown("### 🏊‍♂️ Dimensiones y Estatus de Piscina")
             piscina_estatus = st.selectbox(
                 "Estatus de la Piscina:",
-                [
-                    "Sin piscina",
-                    "Piscina Operativa Completa (Terminada con bomba, filtros y enchape)",
-                    "Piscina en Estructura / Obra Gris (Vaso de concreto construido, sin enchape ni equipos)"
-                ]
+                ["Sin piscina", "Piscina Operativa Completa", "Piscina en Estructura / Obra Gris (Vaso de concreto sin equipos/enchape)"]
             )
             
-            col_plus1, col_plus2 = st.columns(2)
-            with col_plus1:
-                t_piscina = (piscina_estatus != "Sin piscina")
-                t_planta = st.checkbox("Planta Eléctrica o acometida lista")
-                t_pozo = st.checkbox("Pozo de Agua / Tanque subterráneo de gran capacidad")
-            with col_plus2:
-                t_vista = st.checkbox("Vista privilegiada (Mar / Ávila / Montaña)")
-                t_internet = st.checkbox("Internet / Fibra óptica disponible")
-                t_permisos = st.checkbox("Planos aprobados por Ingeniería Municipal / Alcaldía")
+            if piscina_estatus != "Sin piscina":
+                dim_largo = st.number_input("Largo de la Piscina (Metros):", min_value=1.0, value=8.0, step=0.5)
+                dim_ancho = st.number_input("Ancho de la Piscina (Metros):", min_value=1.0, value=4.0, step=0.5)
+                dim_profundidad = st.number_input("Profundidad Promedio (Metros):", min_value=0.5, value=1.5, step=0.1)
+                dimensiones_piscina = f"{dim_largo}m x {dim_ancho}m x {dim_profundidad}m (Volumen aprox: {int(dim_largo*dim_ancho*dim_profundidad*1000)} Litros)"
+            else:
+                dimensiones_piscina = "N/A"
+
+            st.markdown("### 🧱 Cercado Perimetral del Inmueble")
+            tipo_cerca = st.selectbox(
+                "Tipo de Cerca / Muro Perimetral:",
+                ["Muro perimetral de concreto frisado", "Pared de bloques de concreto", "Cerca de malla alfajor / Ciclón", "Sin cerca perimetral"]
+            )
+            porcentaje_cerca = st.slider("Porcentaje de Conclusión de la Cerca (%):", min_value=0, max_value=100, value=100)
+
+            st.markdown("### 💧 Autonomía Hídrica y Plusvalía")
+            capacidad_tanque = st.number_input("Capacidad del Tanque Subterráneo / Aéreo (Litros):", min_value=0, value=10000, step=1000)
+            t_pozo = st.checkbox("Pozo de Agua Dulce Operativo")
+            t_planta = st.checkbox("Planta Eléctrica o Acometida")
+            t_vista = st.checkbox("Vista Panorámica / al Mar")
+            t_permisos = st.checkbox("Planos aprobados por la Alcaldía / Ingeniería")
 
         st.markdown("---")
         nombre_t = st.text_input("Tu Nombre / Contacto:", key="nombre_t")
         whatsapp_t = st.text_input("Tu Número de WhatsApp:", key="wa_t")
         
-        btn_ejecutar_tasacion = st.form_submit_button("🚀 Calcular Tasación por IA", use_container_width=True)
+        btn_ejecutar_tasacion = st.form_submit_button("🚀 Calcular Tasación Profesional Avanzada", use_container_width=True)
 
     if btn_ejecutar_tasacion:
         if not whatsapp_t:
-            st.error("Por favor ingresa tu número de WhatsApp para enviarte el reporte detallado.")
+            st.error("Por favor ingresa tu número de WhatsApp para recibir el reporte.")
         else:
             base_m2_terr = 40.0
             base_m2_const = 500.0
 
             if "Margarita" in región_t:
-                if mun_t == "Municipio Maneiro":
-                    base_m2_terr = 70.0 if sector_t in ["Costa Azul", "Playa El Ángel", "Pampatar (Casco Histórico)"] else 55.0
-                    base_m2_const = 850.0
-                elif mun_t == "Municipio Antolín del Campo":
-                    base_m2_terr = 65.0 if sector_t in ["Playa El Agua", "Playa Parguito", "Manzanillo"] else 45.0
-                    base_m2_const = 650.0
-                elif mun_t == "Municipio Mariño":
-                    base_m2_terr = 50.0
-                    base_m2_const = 550.0
-                elif mun_t == "Municipio Arismendi":
-                    base_m2_terr = 50.0 if sector_t in ["Guacuco / Playa Guacuco", "La Asunción Centro"] else 35.0
-                    base_m2_const = 600.0
-                elif mun_t == "Municipio Díaz" and sector_t == "El Yaque":
-                    base_m2_terr = 80.0
-                    base_m2_const = 900.0
-                else:
-                    base_m2_terr = 35.0
-                    base_m2_const = 450.0
-
+                base_m2_terr = 55.0
+                base_m2_const = 750.0
             elif "Caracas" in región_t:
-                if mun_t in ["Municipio Chacao", "Municipio Baruta", "Municipio El Hatillo"]:
-                    base_m2_terr = 180.0 if sector_t in ["Las Mercedes", "Altamira", "La Castellana", "La Lagunita"] else 120.0
-                    base_m2_const = 1100.0
-                else:
-                    base_m2_terr = 70.0
-                    base_m2_const = 600.0
-
+                base_m2_terr = 120.0
+                base_m2_const = 1100.0
             elif "Miranda" in región_t:
                 base_m2_terr = 45.0
                 base_m2_const = 450.0
-
             elif "La Guaira" in región_t:
-                base_m2_terr = 60.0 if sector_t in ["Caraballeda (Playa Grande / Caribe)", "Los Corales"] else 40.0
+                base_m2_terr = 50.0
                 base_m2_const = 600.0
 
             if tipo_t == "Terreno":
-                factor_t = 1.0
-                if "Muro perimetral" in tipo_cerca: factor_t += 0.15
-                elif "Pared de bloques" in tipo_cerca: factor_t += 0.10
-                elif "malla alfajor" in tipo_cerca: factor_t += 0.05
-                elif "Cerca viva" in tipo_cerca: factor_t += 0.02
-
-                if "Plana" in topografia: factor_t += 0.10
-                elif "Inclinada" in topografia: factor_t -= 0.15
-                if "Asfaltada" in acceso_vial: factor_t += 0.10
-                elif "Tierra" in acceso_vial: factor_t -= 0.10
-                if "Comercial" in zonificacion: factor_t += 0.15
-                elif "Residencial" in zonificacion: factor_t += 0.10
-                if "Título" in estatus_legal: factor_t += 0.10
-
-                if t_agua: factor_t += 0.05
-                if t_pozo: factor_t += 0.10
-                if t_luz: factor_t += 0.05
-                if t_cloacas: factor_t += 0.05
-                if t_internet: factor_t += 0.05
-                if t_vista: factor_t += 0.15
-
+                factor_cercado = (porcentaje_cerca / 100.0) * (0.15 if "concreto" in tipo_cerca else 0.05)
+                factor_tanque = 0.05 if capacidad_tanque >= 5000 else 0.02
+                factor_t = 1.0 + factor_cercado + factor_tanque
+                
                 precio_m2_final = round(base_m2_terr * factor_t, 2)
                 valor_estimado = round(area_m2_terreno * precio_m2_final, 2)
                 tipo_resultado = "Valor Comercial Estimado del Terreno"
 
                 st.success(f"💰 **{tipo_resultado}:** ${valor_estimado:,.2f} USD")
                 st.info(
-                    f"📊 **Desglose Técnico de Tasación:**\n\n"
-                    f"- **Ubicación:** {mun_t} - {sector_t}\n"
-                    f"- **Área Total:** {area_m2_terreno} m²\n"
-                    f"- **Precio Estimado por m²:** ${precio_m2_final} / m²\n"
-                    f"- **Factor de Ajuste (Servicios y Plusvalía):** +{round((factor_t - 1.0)*100, 1)}%"
+                    f"📊 **Desglose Técnico:**\n\n"
+                    f"- **Área:** {area_m2_terreno} m² | **Cercado:** {porcentaje_cerca}% ({tipo_cerca})\n"
+                    f"- **Tanque de Agua:** {capacidad_tanque:,} Litros\n"
+                    f"- **Precio por m²:** ${precio_m2_final} / m²"
                 )
-
+                
                 msg_tasacion = (
-                    f"Hola, solicito informe formal de tasación de Terreno por IA:%0A"
-                    f"*Solicitante:* {nombre_t} ({whatsapp_t})%0A"
-                    f"*Ubicación Exacta:* {región_t} - {mun_t} ({sector_t})%0A"
-                    f"*Área:* {area_m2_terreno} m² (%20${precio_m2_final}/m²)%0A"
-                    f"*Valor Comercial Estimado:* ${valor_estimado:,.2f} USD"
+                    f"Hola, solicito tasación de Terreno:%0A*Ubicación:* {región_t} - {mun_t} ({sector_t})%0A"
+                    f"*Área:* {area_m2_terreno} m²%0A*Cercado:* {porcentaje_cerca}% (% {tipo_cerca})%0A"
+                    f"*Tanque:* {capacidad_tanque:,} Lts%0A*Valor Estimado:* ${valor_estimado:,.2f} USD"
                 )
-
             else:
-                # AJUSTE TÉCNICO SEGÚN ESTADO DE LA CONSTRUCCIÓN (OBRA GRIS / INCONCLUSA)
-                factor_obra = 1.0
-                descuento_terminacion_txt = "Terminado 100%"
+                # CÁLCULO TÉCNICO AVANZADO CON PORCENTAJE DE OBRA Y TANQUE
+                factor_ejecucion = porcentaje_obra / 100.0
                 
-                if "Obra Gris Avanzada" in estado_obra:
-                    factor_obra = 0.70 # Descuento del 30% por costos de acabados faltantes
-                    descuento_terminacion_txt = "Obra Gris Avanzada (-30% por acabados)"
-                elif "Estructura Inconclusa" in estado_obra:
-                    factor_obra = 0.45 # Descuento del 55% por obra negra / estructura
-                    descuento_terminacion_txt = "Estructura Inconclusa / Obra Negra (-55%)"
-
-                factor = 1.0 * factor_obra
+                # Ajuste por cercado perimetral y su porcentaje
+                factor_cercado_inm = (porcentaje_cerca / 100.0) * 0.06
                 
-                if "Terminado" in estado_obra:
-                    if "Excelente" in estado_conservacion: factor += 0.15
-                    elif "A reparar" in estado_conservacion: factor -= 0.10
-                    if "Amoblado y Equipado" in estado_amoblado_t: factor += 0.10
+                # Ajuste por tanque subterráneo (escala según litros)
+                factor_tanque_inm = 0.08 if capacidad_tanque >= 15000 else (0.04 if capacidad_tanque >= 5000 else 0.01)
 
-                # VALORACIÓN DE PISCINA SEGÚN ESTADO
+                factor_extras = 1.0 + factor_cercado_inm + factor_tanque_inm
                 if piscina_estatus == "Piscina Operativa Completa":
-                    factor += 0.10
+                    factor_extras += 0.12
                 elif piscina_estatus == "Piscina en Estructura / Obra Gris":
-                    factor += 0.04 # Aporta por el costo del vaso de concreto excavado
+                    factor_extras += 0.05
 
-                if t_planta: factor += 0.06
-                if t_pozo: factor += 0.08
-                if t_vista: factor += 0.07
-                if t_permisos: factor += 0.05
+                if t_pozo: factor_extras += 0.08
+                if t_planta: factor_extras += 0.06
+                if t_vista: factor_extras += 0.07
 
-                valor_construccion = m2_construccion_t * base_m2_const * factor
-                valor_terreno = m2_terreno_t * base_m2_terr * 1.0
+                # Valor de construcción ponderado por el % de ejecución real
+                valor_construccion = m2_construccion_t * base_m2_const * factor_ejecucion * factor_extras
+                valor_terreno = m2_terreno_t * base_m2_terr * factor_extras
                 valor_total_venta = valor_construccion + valor_terreno
                 
                 if "Alquiler" in transaccion_t:
@@ -593,19 +553,21 @@ with tab_ia:
 
                 st.success(f"💰 **{tipo_resultado}:** ${valor_estimado:,.2f} USD")
                 st.info(
-                    f"📊 **Desglose Técnico de Tasación:**\n\n"
-                    f"- **Inmueble:** {tipo_t} en {mun_t} - {sector_t}\n"
-                    f"- **Condición de Obra:** {descuento_terminacion_txt}\n"
-                    f"- **Piscina:** {piscina_estatus}\n"
+                    f"📊 **Desglose Técnico Avanzado:**\n\n"
+                    f"- **Ejecución de Obra:** {porcentaje_obra}% ({estado_obra})\n"
+                    f"- **Cercado Perimetral:** {porcentaje_cerca}% concluido\n"
+                    f"- **Piscina:** {piscina_estatus} [{dimensiones_piscina}]\n"
+                    f"- **Tanque Subterráneo:** {capacidad_tanque:,} Litros\n"
                     f"- **Área Techada:** {m2_construccion_t} m² | **Terreno:** {m2_terreno_t} m²"
                 )
                 
                 msg_tasacion = (
-                    f"Hola, solicito el informe formal de tasación por IA:%0A"
-                    f"*Solicitante:* {nombre_t} ({whatsapp_t})%0A"
-                    f"*Propiedad:* {tipo_t} ({estado_obra}) en {región_t} - {mun_t} ({sector_t})%0A"
-                    f"*Área Techada:* {m2_construccion_t} m² | *Terreno:* {m2_terreno_t} m²%0A"
-                    f"*Piscina:* {piscina_estatus}%0A"
+                    f"Hola, solicito informe de tasación avanzada:%0A"
+                    f"*Inmueble:* {tipo_t} en {región_t} - {mun_t} ({sector_t})%0A"
+                    f"*Avance de Obra:* {porcentaje_obra}%%0A"
+                    f"*Cercado:* {porcentaje_cerca}% ({tipo_cerca})%0A"
+                    f"*Piscina:* {piscina_estatus} ({dimensiones_piscina})%0A"
+                    f"*Tanque:* {capacidad_tanque:,} Lts%0A"
                     f"*Resultado {tipo_resultado}:* ${valor_estimado:,.2f} USD"
                 )
 
