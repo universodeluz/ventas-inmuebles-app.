@@ -365,11 +365,11 @@ with tab_vendedor:
             st.link_button(f"📍 Ver {sector_v} en Google Maps", url_mapa_previa, use_container_width=True)
 
 # =========================================================
-# PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA (CON CAMPOS VISIBLES DE PISCINA)
+# PESTAÑA 3: ASISTENTE DE TASACIÓN TÉCNICA E INSPECCIÓN IA (CON MULTI-NIVEL Y PISCINA DINÁMICA)
 # =========================================================
 with tab_ia:
     st.subheader("🤖 Asistente de Tasación Técnica por IA")
-    st.markdown("Cálculo algorítmico avanzado considerando porcentaje de obra, dimensiones volumétricas de piscinas, cercados perimetrales y capacidad de tanques subterráneos.")
+    st.markdown("Cálculo algorítmico avanzado considerando plantas múltiples independientes, avance de obra por nivel, volumen de piscina, cercados y tanques.")
     
     región_t = st.selectbox("1. Estado o Región:", list(ESTRUCTURA_GEOGRAFICA.keys()), key="reg_t")
     mun_t = st.selectbox("2. Municipio:", list(ESTRUCTURA_GEOGRAFICA[región_t].keys()), key="mun_t")
@@ -381,7 +381,7 @@ with tab_ia:
     
     tipo_t = st.selectbox("4. Tipo de Inmueble a Tasar:", TIPOS_INMUEBLES, key="tipo_t")
 
-    with st.form("form_tasacion_ia_avanzado_visible"):
+    with st.form("form_tasacion_ia_multinivel_dinamico"):
         
         if tipo_t == "Terreno":
             st.markdown("### 📐 Criterios de Valoración para Terrenos")
@@ -414,34 +414,55 @@ with tab_ia:
             t_internet = st.checkbox("Fibra Óptica / Conectividad (+5%)")
             t_vista = st.checkbox("Vista al Mar / Panorámica a la Montaña (+15%)")
             
-            estado_obra = "Terminado 100%"
-            porcentaje_obra = 100
+            num_plantas = 0
+            m2_construccion_total = 0.0
+            factor_ejecucion_ponderado = 1.0
             piscina_estatus = "Sin piscina"
             dim_largo, dim_ancho, dim_profundidad = 0.0, 0.0, 0.0
 
         else:
-            st.markdown("### 🏠 Criterios de Construcción y Ejecución")
+            st.markdown("### 🏠 Criterios de Construcción y Niveles de la Edificación")
             transaccion_t = st.radio("Objetivo de Tasación:", ["Valor de Venta Comercial", "Canon de Alquiler Sugerido"])
             
-            estado_obra = st.selectbox(
-                "Estado General de la Edificación:",
-                [
-                    "100% Terminado y Habitable",
-                    "Obra Gris Avanzada (Tuberías, techos y paredes listas, faltan acabados)",
-                    "Estructura Inconclusa / Obra Negra (Estructura de concreto sin friso)"
-                ]
-            )
-            
-            porcentaje_obra = st.slider(
-                "Porcentaje Exacto de Ejecución de la Obra (%):", 
-                min_value=10, max_value=100, 
-                value=100 if "100%" in estado_obra else (70 if "Gris" in estado_obra else 40)
-            )
+            num_plantas = st.number_input("Número de Niveles / Plantas de la Edificación:", min_value=1, max_value=5, value=2)
 
-            m2_construccion_t = st.number_input("Área de Construcción Techada (m²):", min_value=0, value=150)
+            m2_construccion_total = 0.0
+            suma_ponderada_construccion = 0.0
+
+            # Bucle para evaluar cada planta de forma independiente
+            for i in range(int(num_plantas)):
+                st.markdown(f"#### 📐 Planta / Nivel {i+1}")
+                col_p1, col_p2, col_p3 = st.columns(3)
+                
+                with col_p1:
+                    m2_nivel = st.number_input(f"Área Nivel {i+1} (m²):", min_value=0.0, value=100.0 if i==0 else 80.0, key=f"m2_p_{i}")
+                with col_p2:
+                    estado_nivel = st.selectbox(
+                        f"Estatus Nivel {i+1}:",
+                        [
+                            "100% Terminado y Habitable",
+                            "Obra Gris Avanzada (Paredes/puntos listos, faltan acabados) (~70%)",
+                            "Obra Negra / Estructura (Concreto y columnas sin friso) (~40%)"
+                        ],
+                        key=f"est_p_{i}"
+                    )
+                with col_p3:
+                    pct_nivel = st.slider(
+                        f"% Avance Nivel {i+1}:", 
+                        min_value=10, max_value=100, 
+                        value=100 if "100%" in estado_nivel else (70 if "Gris" in estado_nivel else 40),
+                        key=f"pct_p_{i}"
+                    )
+                
+                m2_construccion_total += m2_nivel
+                suma_ponderada_construccion += (m2_nivel * (pct_nivel / 100.0))
+
+            # Factor de ejecución global ponderado por metros cuadrados de todas las plantas
+            factor_ejecucion_ponderado = (suma_ponderada_construccion / m2_construccion_total) if m2_construccion_total > 0 else 1.0
+
             m2_terreno_t = st.number_input("Área de Terreno / Parcela (m² totales):", min_value=0, value=350)
-            habitaciones_t = st.number_input("Habitaciones:", min_value=0, value=3, key="hab_t")
-            banos_t = st.number_input("Baños:", min_value=0, value=2, key="ban_t")
+            habitaciones_t = st.number_input("Habitaciones Totales:", min_value=0, value=4, key="hab_t")
+            banos_t = st.number_input("Baños Totales:", min_value=0, value=3, key="ban_t")
             
             st.markdown("### 🏊‍♂️ Dimensiones y Estatus de Piscina (Cálculo por Volumen m³)")
             piscina_estatus = st.selectbox(
@@ -449,13 +470,12 @@ with tab_ia:
                 ["Sin piscina", "Piscina Operativa Completa", "Piscina en Estructura / Obra Gris (Vaso de concreto sin equipos/enchape)"]
             )
             
-            # CAMPOS DE DIMENSIONES VISIBLES SIEMPRE QUE NO ESTÉ EN "Sin piscina"
-            col_p1, col_p2, col_p3 = st.columns(3)
-            with col_p1:
+            col_pi1, col_pi2, col_pi3 = st.columns(3)
+            with col_pi1:
                 dim_largo = st.number_input("Largo (m):", min_value=0.0, value=8.0 if piscina_estatus != "Sin piscina" else 0.0, step=0.5)
-            with col_p2:
+            with col_pi2:
                 dim_ancho = st.number_input("Ancho (m):", min_value=0.0, value=4.0 if piscina_estatus != "Sin piscina" else 0.0, step=0.5)
-            with col_p3:
+            with col_pi3:
                 dim_profundidad = st.number_input("Profundidad (m):", min_value=0.0, value=1.5 if piscina_estatus != "Sin piscina" else 0.0, step=0.1)
 
             st.markdown("### 🧱 Cercado Perimetral del Inmueble")
@@ -521,13 +541,8 @@ with tab_ia:
                     f"*Tanque:* {capacidad_tanque:,} Lts%0A*Valor Estimado:* ${valor_estimado:,.2f} USD"
                 )
             else:
-                # CÁLCULO TÉCNICO AVANZADO CON PORCENTAJE DE OBRA Y TANQUE
-                factor_ejecucion = porcentaje_obra / 100.0
-                
-                # Ajuste por cercado perimetral y su porcentaje
+                # CÁLCULO TÉCNICO AVANZADO MULTI-NIVEL
                 factor_cercado_inm = (porcentaje_cerca / 100.0) * 0.06
-                
-                # Ajuste por tanque subterráneo (escala según litros)
                 factor_tanque_inm = 0.08 if capacidad_tanque >= 15000 else (0.04 if capacidad_tanque >= 5000 else 0.01)
 
                 factor_extras = 1.0 + factor_cercado_inm + factor_tanque_inm
@@ -535,8 +550,8 @@ with tab_ia:
                 if t_planta: factor_extras += 0.06
                 if t_vista: factor_extras += 0.07
 
-                # Valor de construcción ponderado por el % de ejecución real
-                valor_construccion = m2_construccion_t * base_m2_const * factor_ejecucion * factor_extras
+                # Valor de construcción ponderado usando el avance real de cada nivel
+                valor_construccion = m2_construccion_total * base_m2_const * factor_ejecucion_ponderado * factor_extras
                 valor_terreno = m2_terreno_t * base_m2_terr * factor_extras
                 
                 # CÁLCULO DINÁMICO DE PISCINA POR VOLUMEN (M3 / LITROS)
@@ -549,9 +564,9 @@ with tab_ia:
                     dimensiones_piscina = f"{dim_largo}m x {dim_ancho}m x {dim_profundidad}m (Volumen: {volumen_litros:,} Lts)"
                     
                     if piscina_estatus == "Piscina Operativa Completa":
-                        valor_piscina_usd = volumen_m3 * 400.0 # Aprox $400 por m3 terminada con equipos
+                        valor_piscina_usd = volumen_m3 * 400.0 
                     elif piscina_estatus == "Piscina en Estructura / Obra Gris":
-                        valor_piscina_usd = volumen_m3 * 130.0 # Aprox $130 por m3 solo vaso de concreto
+                        valor_piscina_usd = volumen_m3 * 130.0 
 
                 valor_total_venta = valor_construccion + valor_terreno + valor_piscina_usd
                 
@@ -564,19 +579,18 @@ with tab_ia:
 
                 st.success(f"💰 **{tipo_resultado}:** ${valor_estimado:,.2f} USD")
                 st.info(
-                    f"📊 **Desglose Técnico Avanzado:**\n\n"
-                    f"- **Ejecución de Obra:** {porcentaje_obra}% ({estado_obra})\n"
-                    f"- **Cercado Perimetral:** {porcentaje_cerca}% concluido\n"
+                    f"📊 **Desglose Técnico Avanzado Multi-Nivel:**\n\n"
+                    f"- **Total Niveles Evaluados:** {int(num_plantas)} plantas ({m2_construccion_total} m² total)\n"
+                    f"- **Avance de Obra Ponderado:** {round(factor_ejecucion_ponderado * 100, 1)}%\n"
                     f"- **Piscina:** {piscina_estatus} [{dimensiones_piscina}] -> Valor agregado: ${valor_piscina_usd:,.2f} USD\n"
-                    f"- **Tanque Subterráneo:** {capacidad_tanque:,} Litros\n"
-                    f"- **Área Techada:** {m2_construccion_t} m² | **Terreno:** {m2_terreno_t} m²"
+                    f"- **Cercado Perimetral:** {porcentaje_cerca}% concluido\n"
+                    f"- **Tanque Subterráneo:** {capacidad_tanque:,} Litros"
                 )
                 
                 msg_tasacion = (
-                    f"Hola, solicito informe de tasación avanzada:%0A"
-                    f"*Inmueble:* {tipo_t} en {región_t} - {mun_t} ({sector_t})%0A"
-                    f"*Avance de Obra:* {porcentaje_obra}%%0A"
-                    f"*Cercado:* {porcentaje_cerca}% ({tipo_cerca})%0A"
+                    f"Hola, solicito informe de tasación avanzada multi-nivel:%0A"
+                    f"*Inmueble:* {tipo_t} ({int(num_plantas)} plantas, {m2_construccion_total} m²) en {región_t} - {mun_t} ({sector_t})%0A"
+                    f"*Avance Ponderado:* {round(factor_ejecucion_ponderado * 100, 1)}%%%0A"
                     f"*Piscina:* {piscina_estatus} ({dimensiones_piscina})%0A"
                     f"*Tanque:* {capacidad_tanque:,} Lts%0A"
                     f"*Resultado {tipo_resultado}:* ${valor_estimado:,.2f} USD"
